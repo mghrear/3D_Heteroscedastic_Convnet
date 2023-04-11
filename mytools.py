@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 
-
+# Plot a charge distribution as well as the initial direction (label)
 def plot_track_dir(x_points, y_points, z_points, start, direction):
 
     # Plot the track
@@ -24,8 +24,8 @@ def plot_track_dir(x_points, y_points, z_points, start, direction):
     plt.show()
 
 
-
-def plot_tensor(tensor, start, direction, eff_l, vox_l):
+# Plot a tensor as well as the initial direction (label)
+def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
 
     direction = direction/vox_l
     start = (start + eff_l)/vox_l
@@ -42,11 +42,8 @@ def plot_tensor(tensor, start, direction, eff_l, vox_l):
 
 
 
-
 # This function draws an a 3-D vector from an isotropic distribution
 def random_three_vector():
-
-
 
     phi = np.random.uniform()*2*np.pi
 
@@ -58,4 +55,3 @@ def random_three_vector():
     z = TMath.Cos( theta )
 
     return TVector3(x,y,z)
-
