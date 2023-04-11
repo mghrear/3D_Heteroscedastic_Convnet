@@ -1,9 +1,3 @@
-# This script is used to read the degrad simulation as root files and perform the following:
-# 1. Isotropize the simulations and creat a label for the true recoil direction
-# 2. Diffuse the simulations
-# 3. mean-center the simulations
-# 4. Store the simulations as pickles 
-
 import root_pandas as rp
 import pandas as pd
 import ROOT
@@ -12,6 +6,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+import mytools
+
 # Specify location of data file
 data_loc = '/Users/majdghrear/data/e_dir_fit'
 
@@ -19,37 +15,6 @@ data_loc = '/Users/majdghrear/data/e_dir_fit'
 # The data is stored in 100 root files each containing 10k electron recoil simulations
 num_files = 100
 files_e = [data_loc+'/raw_data/he_co2_50keV_'+str(i)+'/he_co2_50keV_'+str(i)+'.root' for i in range(num_files) ]
-
-
-# Define tools to rotate track randomly
-
-# This function rotates the track to a random direction
-def rotate_track(track, to_dir):
-
-    for charge in track:
-
-        charge.RotateY(-(0.5*TMath.Pi()-to_dir.Theta()))
-        charge.RotateZ(to_dir.Phi())
-
-
-# This function draws an a 3-D vector from an isotropic distribution
-def random_three_vector():
-
-    """
-    Generates a random 3D unit vector (direction) with a uniform spherical distribution
-    Algo from http://stackoverflow.com/questions/5408276/python-uniform-spherical-distribution
-    """
-
-    phi = np.random.uniform()*2*np.pi
-
-    costheta = 2.0*np.random.uniform()-1.0
-    theta = TMath.ACos( costheta )
-
-    x = TMath.Sin( theta) * TMath.Cos( phi )
-    y = TMath.Sin( theta) * TMath.Sin( phi )
-    z = TMath.Cos( theta )
-
-    return TVector3(x,y,z)
 
 
 # Total sigma [cm] used for diffusion
@@ -68,15 +33,20 @@ for file in files_e:
 
 	# Loop through the electron recoil simulations and process them
 	for index, row in df.iterrows():
-		# make lists for transformed data
+
+    	# diffuse x/y/z positions
+		x_diff = row['x']+(sigma*np.random.normal(size=len(row['x'])))
+		y_diff = row['y']+(sigma*np.random.normal(size=len(row['y'])))
+		z_diff = row['z']+(sigma*np.random.normal(size=len(row['z'])))
+
 		x_new = []
 		y_new = []
 		z_new = []
 
 		# Determine random direction to rotate to
-		to_dir = random_three_vector()
+		to_dir = mytools.random_three_vector()
 
-		for x,y,z in zip(row['x'],row['y'],row['z']):
+		for x,y,z in zip(x_diff,y_diff,z_diff):
 
 			# Extract vector for charge position
 			charge = TVector3(x,y,z)
@@ -85,35 +55,24 @@ for file in files_e:
 			charge.RotateY(to_dir.Theta())
 			charge.RotateZ(to_dir.Phi())
 
-			# Add diffusion
-			charge += TVector3(sigma* np.random.normal(),sigma* np.random.normal(),sigma* np.random.normal())
-
 			x_new += [charge[0]]
 			y_new += [charge[1]]
 			z_new += [charge[2]]
 
+		mean_x = np.mean(x_new)
+		mean_y = np.mean(y_new)
+		mean_z = np.mean(z_new)
+
 		# change to mean-centered coordinates, this must be done after rotation and diffusion
-		x_final = []
-		y_final = []
-		z_final = []
-
-		# Find data mean
-		mean_dir = TVector3(np.mean(x_new),np.mean(y_new),np.mean(z_new))
-
-		for x,y,z in zip(x_new,y_new,z_new):
-
-			charge = TVector3(x,y,z)
-			charge -= mean_dir
-
-			x_final += [charge[0]]
-			y_final += [charge[1]]
-			z_final += [charge[2]]
+		x_final = x_new-mean_x
+		y_final = y_new-mean_y
+		z_final = z_new-mean_z
 
 		# Store transformed positions and new dataframe
-		df2 = df2.append({'x' : x_final, 'y' : y_final, 'z' : z_final, 'dir' : [to_dir[0],to_dir[1],to_dir[2]], 'offset' : [mean_dir[0],mean_dir[1],mean_dir[2]] }, ignore_index = True)
+		df2 = df2.append({'x' : x_final, 'y' : y_final, 'z' : z_final, 'dir' : np.array([to_dir[0],to_dir[1],to_dir[2]]), 'offset' :  -1.0*np.array( [mean_x, mean_y, mean_z] ) }, ignore_index = True)
 
 	# Save file
-	df2.to_pickle('~/data/e_dir_fit/3D_processed_data/processed_recoils_'+str(ind)+'.pk')
+	df2.to_pickle('~/data/e_dir_fit/processed_data/processed_recoils_'+str(ind)+'.pk')
 	ind += 1
 
 
