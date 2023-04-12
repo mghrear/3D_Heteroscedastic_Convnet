@@ -64,7 +64,7 @@ for file in files_e:
 		mean_z = np.mean(z_new)
 
 		# change to mean-centered coordinates, this must be done after rotation and diffusion
-		x_final = x_new-mean_x
+		x_final = x_new-mean_x # This notation automatically promotes x_new to a numpy array (so no error)
 		y_final = y_new-mean_y
 		z_final = z_new-mean_z
 
