@@ -1,5 +1,4 @@
 import numpy as np
-from ROOT import TVector3, TRandom, TMath
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
@@ -50,8 +49,8 @@ def random_three_vector():
     costheta = 2.0*np.random.uniform()-1.0
     theta = TMath.ACos( costheta )
 
-    x = TMath.Sin( theta) * TMath.Cos( phi )
-    y = TMath.Sin( theta) * TMath.Sin( phi )
-    z = TMath.Cos( theta )
+    x = np.sin( theta) * np.cos( phi )
+    y = sp.sin( theta) * np.sin( phi )
+    z = np.cos( theta )
 
-    return TVector3(x,y,z)
+    return np.array([x,y,z])

@@ -45,6 +45,8 @@ for file in files_e:
 
 		# Determine random direction to rotate to
 		to_dir = mytools.random_three_vector()
+		# Format to_dir as a TVector3
+		to_dir = TVector3(to_dir[0],to_dir[1],to_dir[2])
 
 		for x,y,z in zip(x_diff,y_diff,z_diff):
 
