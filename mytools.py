@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import torch
+
 
 
 # Plot a charge distribution as well as the initial direction (label)
@@ -38,9 +40,6 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
     plt.show()
 
 
-
-
-
 # This function draws an a 3-D vector from an isotropic distribution
 def random_three_vector():
 
@@ -54,3 +53,16 @@ def random_three_vector():
     z = np.cos( theta )
 
     return np.array([x,y,z])
+
+# Class for creating pytorch DataSet
+class CustomDataset(torch.utils.data.Dataset):
+    
+    def __init__(self,dir_loc, N_sims):
+        self.dir_loc = dir_loc
+        self.N_sims = N_sims
+    
+    def __len__(self):
+        return self.N_sims
+    
+    def __getitem__(self,idx):
+        return ( torch.load(self.dir_loc + 'sparse_recoils_' + str(idx) + '.pt' ), torch.load(self.dir_loc + 'label_' + str(idx) + '.pt' ), idx ) 

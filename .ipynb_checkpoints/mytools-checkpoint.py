@@ -1,7 +1,8 @@
 import numpy as np
-from ROOT import TVector3, TRandom, TMath
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+import torch
+
 
 
 # Plot a charge distribution as well as the initial direction (label)
@@ -39,9 +40,6 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
     plt.show()
 
 
-
-
-
 # This function draws an a 3-D vector from an isotropic distribution
 def random_three_vector():
 
@@ -50,8 +48,21 @@ def random_three_vector():
     costheta = 2.0*np.random.uniform()-1.0
     theta = TMath.ACos( costheta )
 
-    x = TMath.Sin( theta) * TMath.Cos( phi )
-    y = TMath.Sin( theta) * TMath.Sin( phi )
-    z = TMath.Cos( theta )
+    x = np.sin( theta) * np.cos( phi )
+    y = sp.sin( theta) * np.sin( phi )
+    z = np.cos( theta )
 
-    return TVector3(x,y,z)
+    return np.array([x,y,z])
+
+# Class for creating pytorch DataSet
+class CustomDataset(torch.utils.data.Dataset):
+    
+    def __init__(self,dir_loc, N_sims):
+        self.dir_loc = dir_loc
+        self.N_sims = N_sims
+    
+    def __len__(self):
+        return self.N_sims
+    
+    def __getitem__(self,idx):
+        return ( torch.load(self.dir_loc + 'sparse_recoils_' + str(idx) + '.pt' ), torch.load(self.dir_loc + 'label_' + str(idx) + '.pt' ), idx ) 
