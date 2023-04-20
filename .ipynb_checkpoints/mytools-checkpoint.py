@@ -70,7 +70,7 @@ class CustomDataset(torch.utils.data.Dataset):
     
 
 # Define training epoch loop
-def train(dataloader, model, loss_fn, optimizer):
+def train(dataloader, model, loss_fn, optimizer, device):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.train()
@@ -103,7 +103,7 @@ def train(dataloader, model, loss_fn, optimizer):
 
 
 # Define validation epoch loop
-def validate(dataloader, model, loss_fn):
+def validate(dataloader, model, loss_fn, device):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.eval()
