@@ -46,10 +46,10 @@ def random_three_vector():
     phi = np.random.uniform()*2*np.pi
 
     costheta = 2.0*np.random.uniform()-1.0
-    theta = TMath.ACos( costheta )
+    theta = np.arccos( costheta )
 
     x = np.sin( theta) * np.cos( phi )
-    y = sp.sin( theta) * np.sin( phi )
+    y = np.sin( theta) * np.sin( phi )
     z = np.cos( theta )
 
     return np.array([x,y,z])
@@ -104,7 +104,6 @@ def train(dataloader, model, loss_fn, optimizer, device):
 
 # Define validation epoch loop
 def validate(dataloader, model, loss_fn, device):
-    size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.eval()
     val_loss = 0

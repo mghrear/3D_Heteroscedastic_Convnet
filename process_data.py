@@ -1,3 +1,9 @@
+# This script processes raw simultation files
+# You must select either training or testing mode
+# In training mode, the added diffusion is drawn randomly from 160-466um (Min and max expected diffusion in a BEAST TPC)
+# In testing mode, the added diffusion is specified
+# After diffusion a random rotation is applied and the simulations are mean-centered
+
 import root_pandas as rp
 import pandas as pd
 import ROOT
@@ -8,31 +14,41 @@ from mpl_toolkits.mplot3d import Axes3D
 
 import mytools
 
+# Select mode: training or testing
+mode = 'training'
+
+# For testing mode, select a specific sigma
+sigma_test = 400*1e-4
+
 # Specify location of data file
 data_loc = '/Users/majdghrear/data/e_dir_fit'
 
-
 # The data is stored in 100 root files each containing 10k electron recoil simulations
-num_files = 100
-files_e = [data_loc+'/raw_data/he_co2_50keV_'+str(i)+'/he_co2_50keV_'+str(i)+'.root' for i in range(num_files) ]
-
+num_files = 300
+files_e = [data_loc+'/raw_'+mode+'_data/he_co2_50keV_'+str(i)+'/he_co2_50keV_'+str(i)+'.root' for i in range(num_files) ]
 
 # Total sigma [cm] used for diffusion
 sigma = 466.0 * float(1e-4)
 
 
 # Loop through files
-ind=0
-for file in files_e:
+for ind, file in enumerate(files_e):
 
 	# Read root file
 	df = rp.read_root(file)
 
 	# Create dataframe for new data
-	df2 = pd.DataFrame(columns = ['x', 'y', 'z', 'dir','offset'])
+	df2 = pd.DataFrame(columns = ['x', 'y', 'z', 'dir','offset','diff'])
 
 	# Loop through the electron recoil simulations and process them
 	for index, row in df.iterrows():
+
+		if mode == 'training':
+			# Total sigma [cm] used for diffusion, drawn from uniform distribution between 160um and 466um
+			sigma = np.random.uniform(160*1e-4,466*1e-4)
+
+		else:
+			sigma = sigma_test
 
     	# diffuse x/y/z positions
 		x_diff = row['x']+(sigma*np.random.normal(size=len(row['x'])))
@@ -71,10 +87,9 @@ for file in files_e:
 		z_final = z_new-mean_z
 
 		# Store transformed positions and new dataframe
-		df2 = df2.append({'x' : x_final, 'y' : y_final, 'z' : z_final, 'dir' : np.array([to_dir[0],to_dir[1],to_dir[2]]), 'offset' :  -1.0*np.array( [mean_x, mean_y, mean_z] ) }, ignore_index = True)
+		df2 = df2.append({'x' : x_final, 'y' : y_final, 'z' : z_final, 'dir' : np.array([to_dir[0],to_dir[1],to_dir[2]]), 'offset' :  -1.0*np.array( [mean_x, mean_y, mean_z] ), 'diff' : sigma }, ignore_index = True)
 
 	# Save file
-	df2.to_pickle('~/data/e_dir_fit/processed_data/processed_recoils_'+str(ind)+'.pk')
-	ind += 1
+	df2.to_pickle('~/data/e_dir_fit/processed_'+mode+'_data/processed_recoils_'+str(ind)+'.pk')
 
 
