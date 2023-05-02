@@ -45,17 +45,13 @@ for file in files_e:
             print("tracks not contained: ", cnt)
             continue
 
-        # Initialize empty dense tensor as numpy array
-        voxelgrid = np.zeros(dim).astype('uint8')
+        # Create sparse tensor
+        indices = torch.stack( (torch.zeros(len(row['x'])), (torch.tensor(row['x'])+eff_l)/vox_l  , (torch.tensor(row['y'])+eff_l)/vox_l, (torch.tensor(row['z'])+eff_l)/vox_l ) ).type(torch.int16)
+        values = torch.ones(len(row['x'])).type(torch.float)
+        vg = torch.sparse_coo_tensor(indices, values, dim)
 
-        # Loop the x, y, z positions in the recoil and fill in the dense tensor
-        for x,y,z in zip(row['x'],row['y'],row['z']):
-            voxelgrid[0][int((x+eff_l)/vox_l)][int((y+eff_l)/vox_l)][int((z+eff_l)/vox_l)] += 1
-
-        # Convert to pytorch tensor
-        voxelgrid = torch.tensor(voxelgrid)
-        # Convert to sparse pytorch tensor
-        vg = voxelgrid.to_sparse()
+        # Easy way to sum up duplicate entries in the sparse tensor above
+        vg = vg.to_dense().to_sparse()
         
         df2 = df2.append({ 'dir' : row['dir'], 'offset' :  row['offset'], 'diff' : row['diff'] }, ignore_index = True)
 
