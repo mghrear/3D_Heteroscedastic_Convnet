@@ -2,6 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import torch
+import pandas as pd
+
+import spconv.pytorch as spconv
+from spconv.pytorch import functional as Fsp
+from spconv.pytorch.utils import PointToVoxel
+from spconv.pytorch.hash import HashTable
+import contextlib
 
 
 
@@ -46,10 +53,10 @@ def random_three_vector():
     phi = np.random.uniform()*2*np.pi
 
     costheta = 2.0*np.random.uniform()-1.0
-    theta = TMath.ACos( costheta )
+    theta = np.arccos( costheta )
 
     x = np.sin( theta) * np.cos( phi )
-    y = sp.sin( theta) * np.sin( phi )
+    y = np.sin( theta) * np.sin( phi )
     z = np.cos( theta )
 
     return np.array([x,y,z])
@@ -57,15 +64,16 @@ def random_three_vector():
 # Class for creating pytorch DataSet
 class CustomDataset(torch.utils.data.Dataset):
     
-    def __init__(self,dir_loc, N_sims):
+    def __init__(self,dir_loc, st_info):
         self.dir_loc = dir_loc
-        self.N_sims = N_sims
+        self.st_info = st_info
+        self.N_sims = len(st_info)
     
     def __len__(self):
         return self.N_sims
     
     def __getitem__(self,idx):
-        return ( torch.load(self.dir_loc + 'sparse_recoils_' + str(idx) + '.pt' ), torch.load(self.dir_loc + 'label_' + str(idx) + '.pt' ), idx )
+        return ( torch.load(self.dir_loc + 'sparse_recoils_' + str(idx) + '.pt' ), torch.Tensor(self.st_info.iloc[idx].dir), torch.Tensor(self.st_info.iloc[idx].offset) )
     
     
 
@@ -75,7 +83,7 @@ def train(dataloader, model, loss_fn, optimizer, device):
     num_batches = len(dataloader)
     model.train()
     train_loss = 0
-    for batch, (X, y, index) in enumerate(dataloader):
+    for batch, (X, y, offset) in enumerate(dataloader):
         
         X, y = X.type(torch.FloatTensor).to(device), y.to(device)
         
@@ -101,15 +109,49 @@ def train(dataloader, model, loss_fn, optimizer, device):
     print(f"Training loss: {train_loss:>7f}")
     return(train_loss)
 
+def train_sparse(dataloader, model, loss_fn, optimizer, device):
+    size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+    model.train()
+    train_loss = 0
+    for batch, (X, y, offset) in enumerate(dataloader):
+        
+        X, y = X.type(torch.FloatTensor).to(device), y.to(device)
+        
+        #convert to data to sparse format
+        X = X.coalesce()
+        features = X.values().reshape((X.values().shape[0],1)).to(device)
+        indices = torch.transpose(X.indices()[[True,False,True,True,True]], 0, 1).type(torch.int32).to(device)
+            
+        # Compute prediction error
+        pred = model(features, indices, X.shape[0])
+        loss = loss_fn(pred, y)
+        
+        # Backpropagation
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+            
+        train_loss += loss.item()
+            
+        if batch % 100 == 0:
+            loss, current = loss.item(), batch * len(X)
+            print(f"Current batch training loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+            
+    train_loss /= num_batches
+    print(f"Training loss: {train_loss:>7f}")
+    return(train_loss)
+
+
+
 
 # Define validation epoch loop
 def validate(dataloader, model, loss_fn, device):
-    size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.eval()
     val_loss = 0
     with torch.no_grad():
-        for X, y, index in dataloader:
+        for X, y, offset in dataloader:
             X, y = X.type(torch.FloatTensor).to(device), y.to(device)
             
             #convert to dense tensor
@@ -122,3 +164,26 @@ def validate(dataloader, model, loss_fn, device):
     val_loss /= num_batches
     print(f"Validation loss: {val_loss:>7f} \n")
     return(val_loss)
+
+def validate_sparse(dataloader, model, loss_fn, device):
+    num_batches = len(dataloader)
+    model.eval()
+    val_loss = 0
+    with torch.no_grad():
+        for X, y, offset in dataloader:
+            X, y = X.type(torch.FloatTensor).to(device), y.to(device)
+            
+            #convert to data to sparse format
+            X = X.coalesce()
+            features = X.values().reshape((X.values().shape[0],1)).to(device)
+            indices = torch.transpose(X.indices()[[True,False,True,True,True]], 0, 1).type(torch.int32)
+            
+            pred = model(features, indices, X.shape[0])
+
+            val_loss += loss_fn(pred, y).item()
+            
+    val_loss /= num_batches
+    print(f"Validation loss: {val_loss:>7f} \n")
+    return(val_loss)
+
+
