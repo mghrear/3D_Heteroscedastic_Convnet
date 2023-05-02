@@ -39,6 +39,9 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
 
     plt.show()
 
+# Rotation matrices about y and z
+R_z = lambda ang: np.array( [[np.cos(ang),-np.sin(ang),0],[np.sin(ang),np.cos(ang),0],[0,0,1]] )
+R_y = lambda ang: np.array( [[np.cos(ang),0,np.sin(ang)],[0,1,0],[-np.sin(ang),0,np.cos(ang)]] )
 
 # This function draws an a 3-D vector from an isotropic distribution
 def random_three_vector():
@@ -52,7 +55,7 @@ def random_three_vector():
     y = np.sin( theta) * np.sin( phi )
     z = np.cos( theta )
 
-    return np.array([x,y,z])
+    return np.array([x,y,z]), theta, phi
 
 # Class for creating pytorch DataSet
 class CustomDataset(torch.utils.data.Dataset):

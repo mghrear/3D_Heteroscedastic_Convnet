@@ -55,39 +55,28 @@ for ind, file in enumerate(files_e):
 		y_diff = row['y']+(sigma*np.random.normal(size=len(row['y'])))
 		z_diff = row['z']+(sigma*np.random.normal(size=len(row['z'])))
 
-		x_new = []
-		y_new = []
-		z_new = []
-
 		# Determine random direction to rotate to
-		to_dir = mytools.random_three_vector()
-		# Format to_dir as a TVector3
-		to_dir = TVector3(to_dir[0],to_dir[1],to_dir[2])
+		to_dir, theta, phi = mytools.random_three_vector()
 
-		for x,y,z in zip(x_diff,y_diff,z_diff):
+		# Rotate all points to random direction drawn in previous step
+		Rcoords = mytools.R_z(phi)@mytools.R_y(theta)@np.array((x_diff,y_diff,z_diff))
 
-			# Extract vector for charge position
-			charge = TVector3(x,y,z)
+		x_rot = Rcoords[0]
+		y_rot = Rcoords[1]
+		z_rot = Rcoords[2]
 
-			# Rotate the charge
-			charge.RotateY(to_dir.Theta())
-			charge.RotateZ(to_dir.Phi())
-
-			x_new += [charge[0]]
-			y_new += [charge[1]]
-			z_new += [charge[2]]
-
-		mean_x = np.mean(x_new)
-		mean_y = np.mean(y_new)
-		mean_z = np.mean(z_new)
+		# Find the mean position
+		mean_x = np.mean(x_rot)
+		mean_y = np.mean(y_rot)
+		mean_z = np.mean(z_rot)
 
 		# change to mean-centered coordinates, this must be done after rotation and diffusion
-		x_final = x_new-mean_x # This notation automatically promotes x_new to a numpy array (so no error)
-		y_final = y_new-mean_y
-		z_final = z_new-mean_z
+		x_final = x_rot-mean_x # This notation automatically promotes x_new to a numpy array (so no error)
+		y_final = y_rot-mean_y
+		z_final = z_rot-mean_z
 
 		# Store transformed positions and new dataframe
-		df2 = df2.append({'x' : x_final, 'y' : y_final, 'z' : z_final, 'dir' : np.array([to_dir[0],to_dir[1],to_dir[2]]), 'offset' :  -1.0*np.array( [mean_x, mean_y, mean_z] ), 'diff' : sigma }, ignore_index = True)
+		df2 = df2.append({'x' : x_final, 'y' : y_final, 'z' : z_final, 'dir' : to_dir, 'offset' :  -1.0*np.array( [mean_x, mean_y, mean_z] ), 'diff' : sigma }, ignore_index = True)
 
 	# Save file
 	df2.to_pickle('~/data/e_dir_fit/processed_'+mode+'_data/processed_recoils_'+str(ind)+'.pk')
