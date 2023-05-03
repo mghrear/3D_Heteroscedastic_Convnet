@@ -4,11 +4,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import torch
 import pandas as pd
 
-import spconv.pytorch as spconv
-from spconv.pytorch import functional as Fsp
-from spconv.pytorch.utils import PointToVoxel
-from spconv.pytorch.hash import HashTable
-import contextlib
+
 
 
 
