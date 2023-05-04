@@ -6,8 +6,6 @@ import pandas as pd
 
 
 
-
-
 # Plot a charge distribution as well as the initial direction (label)
 def plot_track_dir(x_points, y_points, z_points, start, direction):
 
@@ -87,7 +85,7 @@ def train(dataloader, model, loss_fn, optimizer, device):
         X, y = X.type(torch.FloatTensor).to(device), y.to(device)
         
         #convert to dense tensor
-        X = X.to_dense()
+        X = X.to_dense() #.reshape(-1, 1, 120, 120, 120) // add this if I use new sparse format
 
         # Compute prediction error
         pred = model(X)
@@ -108,6 +106,9 @@ def train(dataloader, model, loss_fn, optimizer, device):
     print(f"Training loss: {train_loss:>7f}")
     return(train_loss)
 
+
+
+
 def train_sparse(dataloader, model, loss_fn, optimizer, device):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
@@ -117,13 +118,12 @@ def train_sparse(dataloader, model, loss_fn, optimizer, device):
         
         X, y = X.type(torch.FloatTensor).to(device), y.to(device)
         
-        #convert to data to sparse format
         X = X.coalesce()
-        features = X.values().reshape((X.values().shape[0],1)).to(device)
-        indices = torch.transpose(X.indices()[[True,False,True,True,True]], 0, 1).type(torch.int32).to(device)
+        indices = X.indices().permute(1, 0).contiguous().int()
+        features = X.values()
             
         # Compute prediction error
-        pred = model(features, indices, X.shape[0])
+        pred = model(features,indices,X.shape[0])
         loss = loss_fn(pred, y)
         
         # Backpropagation
@@ -154,7 +154,7 @@ def validate(dataloader, model, loss_fn, device):
             X, y = X.type(torch.FloatTensor).to(device), y.to(device)
             
             #convert to dense tensor
-            X = X.to_dense()
+            X = X.to_dense() #.reshape(-1, 1, 120, 120, 120) // add this if I use new sparse format
                         
             pred = model(X)
 
@@ -172,10 +172,9 @@ def validate_sparse(dataloader, model, loss_fn, device):
         for X, y, offset in dataloader:
             X, y = X.type(torch.FloatTensor).to(device), y.to(device)
             
-            #convert to data to sparse format
             X = X.coalesce()
-            features = X.values().reshape((X.values().shape[0],1)).to(device)
-            indices = torch.transpose(X.indices()[[True,False,True,True,True]], 0, 1).type(torch.int32)
+            indices = X.indices().permute(1, 0).contiguous().int()
+            features = X.values()
             
             pred = model(features, indices, X.shape[0])
 
