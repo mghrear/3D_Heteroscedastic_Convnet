@@ -72,44 +72,8 @@ class CustomDataset(torch.utils.data.Dataset):
     def __getitem__(self,idx):
         return ( torch.load(self.dir_loc + 'sparse_recoils_' + str(idx) + '.pt' ), torch.Tensor(self.st_info.iloc[idx].dir), torch.Tensor(self.st_info.iloc[idx].offset) )
     
-    
 
-# Define training epoch loop
 def train(dataloader, model, loss_fn, optimizer, device):
-    size = len(dataloader.dataset)
-    num_batches = len(dataloader)
-    model.train()
-    train_loss = 0
-    for batch, (X, y, offset) in enumerate(dataloader):
-        
-        X, y = X.type(torch.FloatTensor).to(device), y.to(device)
-        
-        #convert to dense tensor
-        X = X.to_dense() #.reshape(-1, 1, 120, 120, 120) // add this if I use new sparse format
-
-        # Compute prediction error
-        pred = model(X)
-        loss = loss_fn(pred, y)
-
-        # Backpropagation
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        
-        train_loss += loss.item()        
-
-        if batch % 100 == 0:
-            loss, current = loss.item(), batch * len(X)
-            print(f"Current batch training loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-            
-    train_loss /= num_batches
-    print(f"Training loss: {train_loss:>7f}")
-    return(train_loss)
-
-
-
-
-def train_sparse(dataloader, model, loss_fn, optimizer, device):
     size = len(dataloader.dataset)
     num_batches = len(dataloader)
     model.train()
@@ -141,30 +105,7 @@ def train_sparse(dataloader, model, loss_fn, optimizer, device):
     print(f"Training loss: {train_loss:>7f}")
     return(train_loss)
 
-
-
-
-# Define validation epoch loop
 def validate(dataloader, model, loss_fn, device):
-    num_batches = len(dataloader)
-    model.eval()
-    val_loss = 0
-    with torch.no_grad():
-        for X, y, offset in dataloader:
-            X, y = X.type(torch.FloatTensor).to(device), y.to(device)
-            
-            #convert to dense tensor
-            X = X.to_dense() #.reshape(-1, 1, 120, 120, 120) // add this if I use new sparse format
-                        
-            pred = model(X)
-
-            val_loss += loss_fn(pred, y).item()
-            
-    val_loss /= num_batches
-    print(f"Validation loss: {val_loss:>7f} \n")
-    return(val_loss)
-
-def validate_sparse(dataloader, model, loss_fn, device):
     num_batches = len(dataloader)
     model.eval()
     val_loss = 0
