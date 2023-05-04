@@ -22,6 +22,7 @@ vox_l = 0.05
 Npix = round(eff_l*2/vox_l) 
 # Tensor dimensions, there is an extra dimension for color which is not used
 # note that I do not use (1,Npix,Npix,Npix). This is because of the spconv layers that I use
+# I need to reshape if I want to use this data to make dense tensors!!!!
 dim = (Npix,Npix,Npix,1)
 
 
@@ -32,12 +33,10 @@ ind = 0
 df2 = pd.DataFrame(columns = ['dir','offset','diff', 'energy'])
 
 
-#for energy in np.arange(35,55,5):
-for energy in [50]:
+for energy in np.arange(35,55,5):
 
     # The data is stored in 100 pickle files each containing 10k electron recoil simulations
-    #files_e = [data_loc+'/processed_training_data/'+str(energy)+'_keV/processed_recoils_'+str(i)+'.pk' for i in range(num_files) ]
-    files_e = [data_loc+'/processed_training_data/'+str(energy)+'_keV/processed_recoils_'+str(i)+'.pk' for i in range(20) ]
+    files_e = [data_loc+'/processed_training_data/'+str(energy)+'_keV/processed_recoils_'+str(i)+'.pk' for i in range(num_files) ]
 
     for file in files_e:
 
@@ -65,6 +64,8 @@ for energy in [50]:
             # Sum up duplicate entries in the sparse tensor above
             vg = vg.coalesce()
             
+            vg = vg.to_dense()
+
             # Add tensor info to new dataframe
             df2 = df2.append({ 'dir' : row['dir'], 'offset' :  row['offset'], 'diff' : row['diff'], 'energy' : energy }, ignore_index = True)
 
@@ -78,5 +79,3 @@ for energy in [50]:
 
 df2.to_pickle(data_loc+'/sparse_training_tensors/sparse_tensor_info.pk')
 
-
-# Warning DIM shape is (Npix,Npix,Npix,1), I need to reshape if I want to use this data with regular convolution!!!!!!!
