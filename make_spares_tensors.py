@@ -10,7 +10,8 @@ import torch
 data_loc = '/Users/majdghrear/data/e_dir_fit'
 
 # number of simulation files per energy (300 files per energy containing 10k simulations each)
-num_files = 300
+# For now I will only use half of the processed data - I can update later if I see signs of overfitting
+num_files = 150
 
 
 # Here a define the pixel grid parameters
