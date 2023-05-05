@@ -14,14 +14,14 @@ from mpl_toolkits.mplot3d import Axes3D
 import mytools
 
 # Select mode: training or testing
-mode = 'training'
+mode = 'testing'
 # For testing mode, select a specific sigma
-sigma_test = 400*1e-4
+sigma_test = 443*1e-4
 
 # Specify location of data file
 data_loc = '/Users/majdghrear/data/e_dir_fit'
 # number of simulation files per energy (300 files per energy containing 10k simulations each)
-num_files = 300
+num_files = 3
 
 
 for energy in np.arange(35,55,5):
