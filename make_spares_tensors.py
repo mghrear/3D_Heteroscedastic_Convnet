@@ -21,7 +21,9 @@ vox_l = 0.05
 # Number of voxels along 1 dim
 Npix = round(eff_l*2/vox_l) 
 # Tensor dimensions, there is an extra dimension for color which is not used
-dim = (1,Npix,Npix,Npix)
+# note that I do not use (1,Npix,Npix,Npix). This is because of the spconv layers that I use
+# I need to reshape if I want to use this data to make dense tensors!!!!
+dim = (Npix,Npix,Npix,1)
 
 
 # index to keep track of simulation number
@@ -48,7 +50,7 @@ for energy in np.arange(35,55,5):
         for index, row in df.iterrows():
 
             # Sparse tensor indices
-            indices = torch.stack( (torch.zeros(len(row['x'])), (torch.tensor(row['x'])+eff_l)/vox_l  , (torch.tensor(row['y'])+eff_l)/vox_l, (torch.tensor(row['z'])+eff_l)/vox_l ) ).type(torch.int16)
+            indices = torch.stack( ( (torch.tensor(row['x'])+eff_l)/vox_l  , (torch.tensor(row['y'])+eff_l)/vox_l, (torch.tensor(row['z'])+eff_l)/vox_l ) ).type(torch.int16)
 
             # If recoil escapes fiducial area, skip it
             if torch.min(indices) < 0 or torch.max(indices) >= Npix:
@@ -56,7 +58,7 @@ for energy in np.arange(35,55,5):
                 continue
             
             # Sparse Values indices
-            values = torch.ones(len(row['x'])).type(torch.float)
+            values = torch.ones( (len(row['x']), 1) ).type(torch.float)
             vg = torch.sparse_coo_tensor(indices, values, dim)
 
             # Sum up duplicate entries in the sparse tensor above
@@ -74,3 +76,4 @@ for energy in np.arange(35,55,5):
 
 
 df2.to_pickle(data_loc+'/sparse_training_tensors/sparse_tensor_info.pk')
+
