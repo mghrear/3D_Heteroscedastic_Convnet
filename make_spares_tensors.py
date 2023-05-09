@@ -5,22 +5,20 @@
 import pandas as pd
 import numpy as np
 import torch
-import mytools
 
 # Specify location of data file
-#data_loc = '/Users/majdghrear/data/e_dir_fit'
-data_loc = '/mnt/scratch/lustre_01/scratch/majd'
+data_loc = '/Users/majdghrear/data/e_dir_fit'
 
 # number of simulation files per energy (300 files per energy containing 10k simulations each)
 # For now I will only use half of the processed data - I can update later if I see signs of overfitting
-num_files = 150
+num_files = 100
 
 
 # Here a define the pixel grid parameters
 # x/y/z length being kept in cm
-eff_l = mytools.voxel_grid['eff_l']
+eff_l = 3.0
 # Voxel size in cm
-vox_l = mytools.voxel_grid['vox_l']
+vox_l = 0.05
 # Number of voxels along 1 dim
 Npix = round(eff_l*2/vox_l) 
 # Tensor dimensions, there is an extra dimension for color which is not used
@@ -32,16 +30,19 @@ dim = (Npix,Npix,Npix,1)
 # index to keep track of simulation number
 ind = 0
 
-# dataframe to store labels, offsets, applied diffusion, and energy
-df2 = pd.DataFrame(columns = ['dir','offset','diff', 'energy'])
 
-
-for energy in np.arange(35,55,5):
+for energy in np.arange(40,55,5):
 
     # The data is stored in 100 pickle files each containing 10k electron recoil simulations
     files_e = [data_loc+'/processed_training_data/'+str(energy)+'_keV/processed_recoils_'+str(i)+'.pk' for i in range(num_files) ]
 
+    # file counter
+    fcnt = 0
+
     for file in files_e:
+
+        # dataframe to store labels, offsets, applied diffusion, and energy
+        df2 = pd.DataFrame(columns = ['dir','offset','diff', 'energy'])
 
         #Counter for tracks not contained
         cnt = 0
@@ -77,6 +78,13 @@ for energy in np.arange(35,55,5):
         print("finished: ", file)
         print("tracks not contained: ", cnt)
 
+        df2.to_pickle(data_loc+'/sparse_training_tensors_info/sparse_tensor_info'+str(energy)+'_'+str(fcnt)+'.pk')
+        fcnt += 1
 
-df2.to_pickle(data_loc+'/sparse_training_tensors/sparse_tensor_info.pk')
+
+# After this I merge all the pickle files into one using
+# import glob
+# files = glob.glob('/Users/majdghrear/data/e_dir_fit/sparse_training_tensors_info/*.pk')
+# df = pd.concat([pd.read_pickle(fp) for fp in files], ignore_index=True)
+# df.to_pickle(data_loc+'/sparse_training_tensors/sparse_tensor_info.pk')
 
