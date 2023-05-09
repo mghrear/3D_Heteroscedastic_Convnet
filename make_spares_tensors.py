@@ -5,9 +5,11 @@
 import pandas as pd
 import numpy as np
 import torch
+import mytools
 
 # Specify location of data file
-data_loc = '/Users/majdghrear/data/e_dir_fit'
+#data_loc = '/Users/majdghrear/data/e_dir_fit'
+data_loc = '/mnt/scratch/lustre_01/scratch/majd'
 
 # number of simulation files per energy (300 files per energy containing 10k simulations each)
 # For now I will only use half of the processed data - I can update later if I see signs of overfitting
@@ -16,9 +18,9 @@ num_files = 150
 
 # Here a define the pixel grid parameters
 # x/y/z length being kept in cm
-eff_l = 3.0
+eff_l = mytools.voxel_grid['eff_l']
 # Voxel size in cm
-vox_l = 0.05
+vox_l = mytools.voxel_grid['vox_l']
 # Number of voxels along 1 dim
 Npix = round(eff_l*2/vox_l) 
 # Tensor dimensions, there is an extra dimension for color which is not used
