@@ -5,57 +5,78 @@
 import pandas as pd
 import numpy as np
 import torch
+import mytools
 
 # Specify location of data file
-data_loc = '/Users/majdghrear/data/e_dir_fit'
+#data_loc = '/Users/majdghrear/data/e_dir_fit'
+data_loc = '/mnt/scratch/lustre_01/scratch/majd'
 
-# The data is stored in 100 pickle files each containing 10k electron recoil simulations
-files_e = [data_loc+'/processed_data/processed_recoils_'+str(i)+'.pk' for i in range(100) ]
+# number of simulation files per energy (300 files per energy containing 10k simulations each)
+# For now I will only use half of the processed data - I can update later if I see signs of overfitting
+num_files = 150
 
 
 # Here a define the pixel grid parameters
 # x/y/z length being kept in cm
-eff_l = 3.0
+eff_l = mytools.voxel_grid['eff_l']
 # Voxel size in cm
-vox_l = 0.05
+vox_l = mytools.voxel_grid['vox_l']
 # Number of voxels along 1 dim
 Npix = round(eff_l*2/vox_l) 
 # Tensor dimensions, there is an extra dimension for color which is not used
-dim = (1,Npix,Npix,Npix)
+# note that I do not use (1,Npix,Npix,Npix). This is because of the spconv layers that I use
+# I need to reshape if I want to use this data to make dense tensors!!!!
+dim = (Npix,Npix,Npix,1)
 
 
-# Loop through files
+# index to keep track of simulation number
 ind = 0
-cnt = 0
 
-for file in files_e:
+# dataframe to store labels, offsets, applied diffusion, and energy
+df2 = pd.DataFrame(columns = ['dir','offset','diff', 'energy'])
 
-	# Read root file
-	df = pd.read_pickle(file)
 
-	# Loop thtough processed simulations in file
-	for index, row in df.iterrows():
+for energy in np.arange(35,55,5):
 
-		# If recoil escapes fiducial area, skip it
-		if np.max(row['x']) >= eff_l or np.min(row['x']) < -eff_l or np.max(row['y']) >= eff_l or np.min(row['y']) < -eff_l or np.max(row['z']) >= eff_l or np.min(row['z']) < -eff_l:
-			cnt += 1
-			print("tracks not contained: ", cnt)
-			continue
+    # The data is stored in 100 pickle files each containing 10k electron recoil simulations
+    files_e = [data_loc+'/processed_training_data/'+str(energy)+'_keV/processed_recoils_'+str(i)+'.pk' for i in range(num_files) ]
 
-		# Initialize empty dense tensor as numpy array
-		voxelgrid = np.zeros(dim).astype('uint8')
+    for file in files_e:
 
-		# Loop the x, y, z positions in the recoil and fill in the dense tensor
-		for x,y,z in zip(row['x'],row['y'],row['z']):
-			voxelgrid[0][int((x+eff_l)/vox_l)][int((y+eff_l)/vox_l)][int((z+eff_l)/vox_l)] += 1
+        #Counter for tracks not contained
+        cnt = 0
 
-		# Convert to pytorch tensor
-		voxelgrid = torch.tensor(voxelgrid)
-		# Convert to sparse pytorch tensor
-		vg = voxelgrid.to_sparse()
+        # Read root file
+        df = pd.read_pickle(file)
 
-		# Store sparse tensor and corresponding information
-		torch.save( vg, data_loc+'/sparse_tensors/sparse_recoils_'+str(ind)+'.pt')
-		torch.save( torch.Tensor(row['dir']), data_loc+'/sparse_tensors/label_'+str(ind)+'.pt')
-		torch.save( torch.Tensor(row['offset']), data_loc+'/sparse_tensors/offset_'+str(ind)+'.pt')
-		ind += 1
+        # Loop thtough processed simulations in file
+        for index, row in df.iterrows():
+
+            # Sparse tensor indices
+            indices = torch.stack( ( (torch.tensor(row['x'])+eff_l)/vox_l  , (torch.tensor(row['y'])+eff_l)/vox_l, (torch.tensor(row['z'])+eff_l)/vox_l ) ).type(torch.int16)
+
+            # If recoil escapes fiducial area, skip it
+            if torch.min(indices) < 0 or torch.max(indices) >= Npix:
+                cnt += 1
+                continue
+            
+            # Sparse Values indices
+            values = torch.ones( (len(row['x']), 1) ).type(torch.float)
+            vg = torch.sparse_coo_tensor(indices, values, dim)
+
+            # Sum up duplicate entries in the sparse tensor above
+            vg = vg.coalesce()
+            
+            # Add tensor info to new dataframe
+            df2 = df2.append({ 'dir' : row['dir'], 'offset' :  row['offset'], 'diff' : row['diff'], 'energy' : energy }, ignore_index = True)
+
+            # Store sparse tensor and corresponding information
+            torch.save( vg, data_loc+'/sparse_training_tensors/sparse_recoils_'+str(ind)+'.pt')
+            ind += 1
+        
+        print("finished: ", file)
+        print("tracks not contained: ", cnt)
+
+
+df2.to_pickle(data_loc+'/sparse_training_tensors/sparse_tensor_info.pk')
+
