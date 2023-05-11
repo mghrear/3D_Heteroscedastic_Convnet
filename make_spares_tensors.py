@@ -5,6 +5,7 @@
 import pandas as pd
 import numpy as np
 import torch
+import mytools
 
 # Specify location of data file
 data_loc = '/Users/majdghrear/data/e_dir_fit'
@@ -15,10 +16,10 @@ num_files = 100
 
 
 # Here a define the pixel grid parameters
-# x/y/z length being kept in cm
-eff_l = 3.0
-# Voxel size in cm
-vox_l = 0.05
+# x/y/z length being kept in cm                                                                                                                                           
+eff_l= mytools.voxel_grid['eff_l']
+# Voxel size in cm                                                                                                                                                       
+vox_l = mytools.voxel_grid['vox_l']
 # Number of voxels along 1 dim
 Npix = round(eff_l*2/vox_l) 
 # Tensor dimensions, there is an extra dimension for color which is not used
@@ -42,7 +43,7 @@ for energy in np.arange(40,55,5):
     for file in files_e:
 
         # dataframe to store labels, offsets, applied diffusion, and energy
-        df2 = pd.DataFrame(columns = ['dir','offset','diff', 'energy'])
+        df2 = pd.DataFrame(columns = ['dir','offset','diff', 'energy', 'true_index'])
 
         #Counter for tracks not contained
         cnt = 0
@@ -50,7 +51,7 @@ for energy in np.arange(40,55,5):
         # Read root file
         df = pd.read_pickle(file)
 
-        # Loop thtough processed simulations in file
+        # Loop through processed simulations in file
         for index, row in df.iterrows():
 
             # Sparse tensor indices
@@ -59,21 +60,21 @@ for energy in np.arange(40,55,5):
             # If recoil escapes fiducial area, skip it
             if torch.min(indices) < 0 or torch.max(indices) >= Npix:
                 cnt += 1
-                continue
-            
-            # Sparse Values indices
-            values = torch.ones( (len(row['x']), 1) ).type(torch.float)
-            vg = torch.sparse_coo_tensor(indices, values, dim)
 
-            # Sum up duplicate entries in the sparse tensor above
-            vg = vg.coalesce()
-            
-            # Add tensor info to new dataframe
-            df2 = df2.append({ 'dir' : row['dir'], 'offset' :  row['offset'], 'diff' : row['diff'], 'energy' : energy }, ignore_index = True)
+            else:
+                # Sparse Values indices
+                values = torch.ones( (len(row['x']), 1) ).type(torch.float)
+                vg = torch.sparse_coo_tensor(indices, values, dim)
 
-            # Store sparse tensor and corresponding information
-            torch.save( vg, data_loc+'/sparse_training_tensors/sparse_recoils_'+str(ind)+'.pt')
-            ind += 1
+                # Sum up duplicate entries in the sparse tensor above
+                vg = vg.coalesce()
+            
+                # Add tensor info to new dataframe
+                df2 = df2.append({ 'dir' : row['dir'], 'offset' :  row['offset'], 'diff' : row['diff'], 'energy' : energy, 'true_index' : ind}, ignore_index = True)
+
+                # Store sparse tensor and corresponding information
+                torch.save( vg, data_loc+'/sparse_training_tensors/sparse_recoils_'+str(ind)+'.pt')
+                ind += 1
         
         print("finished: ", file)
         print("tracks not contained: ", cnt)
