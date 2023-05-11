@@ -6,27 +6,25 @@
 
 import root_pandas as rp
 import pandas as pd
-import ROOT
-from ROOT import TVector3, TRandom, TMath
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import mytools
 
 # Select mode: training or testing
-mode = 'testing'
+mode = 'training'
 # For testing mode, select a specific sigma
 sigma_test = 443*1e-4
 
 # Specify location of data file
 data_loc = '/Users/majdghrear/data/e_dir_fit'
 # number of simulation files per energy (300 files per energy containing 10k simulations each)
-num_files = 3
+num_files = 100
 
 
 for energy in np.arange(35,55,5):
 
-	# List if simulation files
+	# List of simulation files
 	files_e = [data_loc+'/raw_'+mode+'_data/'+str(energy)+'_keV/he_co2_'+str(energy)+'keV_'+str(i)+'/he_co2_'+str(energy)+'keV_'+str(i)+'.root' for i in range(num_files) ]
 
 	# Loop through files
@@ -35,7 +33,7 @@ for energy in np.arange(35,55,5):
 		# Read root file into pandas dataframe
 		df = rp.read_root(file)
 
-		# Create dataframe for processed data
+		# Create new dataframe for processed data
 		df2 = pd.DataFrame(columns = ['x', 'y', 'z', 'dir','offset','diff'])
 
 		# Loop through the electron recoil simulations and process them
@@ -53,7 +51,7 @@ for energy in np.arange(35,55,5):
 			y_diff = row['y']+(sigma*np.random.normal(size=len(row['y'])))
 			z_diff = row['z']+(sigma*np.random.normal(size=len(row['z'])))
 
-			# Determine random direction to rotate to
+			# Draw random direction to rotate to
 			to_dir, theta, phi = mytools.random_three_vector()
 
 			# Rotate all points to random direction drawn in previous step

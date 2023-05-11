@@ -1,3 +1,5 @@
+# Script containing all models
+
 import numpy as np
 import torch
 from torch import nn
@@ -5,7 +7,7 @@ import torch.nn.functional as F
 import torchvision
 import spconv.pytorch as spconv
 
-
+# Heteroscedastic convnet model
 class spConvnet_HSCDC(nn.Module):
     def __init__(self, shape):
         super(spConvnet_HSCDC, self).__init__()
@@ -43,7 +45,7 @@ class spConvnet_HSCDC(nn.Module):
                 
         return output1,output2
     
-    
+# Homoscedastic convnet model    
 class spConvnet(nn.Module):
     def __init__(self, shape):
         super(spConvnet, self).__init__()
@@ -78,7 +80,8 @@ class spConvnet(nn.Module):
     
     
 # Method for determining the initial direction of an electron recoil without ML
-# refs: https://iopscience.iop.org/article/10.3847/1538-3881/ac51c9/pdf , https://lucidar.me/en/mathematics/weighted-pca/
+# This method is from https://iopscience.iop.org/article/10.3847/1538-3881/ac51c9/pdf
+# Useful ref for weighted SVD fits: https://lucidar.me/en/mathematics/weighted-pca/
 def NML(x_vals, y_vals, z_vals, charges, true_dir, n_sigma_L = 1.5, n_sigma_H = 3, w_o = 0.05, cheat = False):
 
     X = np.array([x_vals,y_vals,z_vals]).T

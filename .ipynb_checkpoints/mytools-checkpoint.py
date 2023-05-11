@@ -1,3 +1,6 @@
+# Script containing functions, classes, and dictionaries that are used throughout.
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -5,9 +8,9 @@ import torch
 from torch import nn
 import pandas as pd
 
-# Here a define the pixel grid parameters
+# Here we define the pixel grid parameters used throughout
 voxel_grid = {
-  "eff_l": 3.0, #x/y/z length being kept in cm
+  "eff_l": 3.0, # x/y/z length being kept in cm
   "vox_l": 0.05, # cubic voxel length in cm
 }
 
@@ -151,7 +154,7 @@ def validate(dataloader, model, loss_fn, device):
     return(val_loss)
 
 
-# Test Loop for HSCDC model
+# Test Loop for heteroscedastic convnet model
 def test_HSCDC(dataloader, model, device):
     v_pred = torch.Tensor([])
     K_pred = torch.Tensor([])
@@ -180,7 +183,7 @@ def test_HSCDC(dataloader, model, device):
 
     return v_pred, K_pred, v_true, off_true
 
-# Test Loop for regular model
+# Test Loop homoscedastic convnet model
 def test_CNN(dataloader, model, device):
     v_pred = torch.Tensor([])
     v_true = torch.Tensor([])

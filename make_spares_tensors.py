@@ -1,6 +1,4 @@
-# This script is used to read the processed pickle files from "process_data.py" and perform the following:
-# 1. Voxelize the data
-# 2. store the data as pytorch sparse tensors, to be analyzed by a convolutional neural network
+# This script is used to read the processed pickle files from "process_data.py" and convert them into sparse tensors
 
 import pandas as pd
 import numpy as np
@@ -20,6 +18,7 @@ num_files = 100
 eff_l= mytools.voxel_grid['eff_l']
 # Voxel size in cm                                                                                                                                                       
 vox_l = mytools.voxel_grid['vox_l']
+
 # Number of voxels along 1 dim
 Npix = round(eff_l*2/vox_l) 
 # Tensor dimensions, there is an extra dimension for color which is not used
@@ -83,9 +82,5 @@ for energy in np.arange(40,55,5):
         fcnt += 1
 
 
-# After this I merge all the pickle files into one using
-# import glob
-# files = glob.glob('/Users/majdghrear/data/e_dir_fit/sparse_training_tensors_info/*.pk')
-# df = pd.concat([pd.read_pickle(fp) for fp in files], ignore_index=True)
-# df.to_pickle(data_loc+'/sparse_training_tensors/sparse_tensor_info.pk')
+# After this I merge all the pickle files into a file names sparse_tensor_info.pk which is stored in /sparse_training_tensors/
 
