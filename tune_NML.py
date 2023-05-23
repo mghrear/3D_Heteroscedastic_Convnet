@@ -6,7 +6,7 @@ import mymodels
 
 ########################################
 ########################################
-# Select Energy (35 or 50 keV)
+# Select Energy (40 or 50 keV)
 Energy = 40
 # Select diff amount (H or L)
 Diff = 'H'

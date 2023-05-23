@@ -7,26 +7,33 @@ import torch.nn.functional as F
 import torchvision
 import spconv.pytorch as spconv
 
+    
 # Heteroscedastic convnet model
-class spConvnet_HSCDC(nn.Module):
+class spConvnet_HSCDC_subM(nn.Module):
     def __init__(self, shape):
-        super(spConvnet_HSCDC, self).__init__()
+        super(spConvnet_HSCDC_subM, self).__init__()
         self.net = spconv.SparseSequential(
-            spconv.SparseConv3d(in_channels=1, out_channels=50, kernel_size=6, stride=2, bias=True),
+            spconv.SubMConv3d(in_channels=1, out_channels=32, kernel_size=7, stride=1, bias=True),
+            nn.ReLU(),
+            spconv.SubMConv3d(in_channels=32, out_channels=40, kernel_size=5, stride=1, bias=True),
+            nn.ReLU(),
+            spconv.SparseConv3d(in_channels=40, out_channels=50, kernel_size=6, stride=2, bias=True),
             nn.ReLU(),
             spconv.SparseMaxPool3d(kernel_size=2, stride=2),
-            spconv.SparseConv3d(in_channels=50, out_channels=30, kernel_size=4, stride=1, bias=True),
+            spconv.SparseConv3d(in_channels=50, out_channels=30, kernel_size=3, stride=2, bias=True),
             nn.ReLU(),
-            spconv.SparseConv3d(in_channels=30, out_channels=20, kernel_size=3, stride=1, bias=True),
+            spconv.SparseConv3d(in_channels=30, out_channels=10, kernel_size=3, stride=1, bias=True),
             nn.ReLU(),
             spconv.SparseMaxPool3d(kernel_size=2, stride=2),
             spconv.ToDense(),
         )
-        self.fc1 = nn.Linear(12**3 *20, 100)
-        self.fc2_1 = nn.Linear(100, 30)
-        self.fc3_1 = nn.Linear(30, 3)
-        self.fc2_2 = nn.Linear(100, 30)
-        self.fc3_2 = nn.Linear(30, 1)
+        self.fc1 = nn.Linear(6**3 *10, 100)
+        self.fc2_1 = nn.Linear(100, 60)
+        self.fc3_1 = nn.Linear(60, 20)
+        self.fc4_1 = nn.Linear(20, 3)
+        self.fc2_2 = nn.Linear(100, 60)
+        self.fc3_2 = nn.Linear(60, 20)
+        self.fc4_2 = nn.Linear(20, 1)
         
         self.shape = shape
 
@@ -37,32 +44,39 @@ class spConvnet_HSCDC(nn.Module):
         x = self.net(x_sp)
         x = torch.flatten(x, 1) # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
-        x1 = torch.tanh(self.fc2_1(x))
-        output1 = F.normalize(self.fc3_1(x1),dim=1)
+        x1 = F.relu(self.fc2_1(x))
+        x1 = torch.tanh(self.fc3_1(x1))
+        output1 = F.normalize(self.fc4_1(x1),dim=1)
         x2 = F.relu(self.fc2_2(x))
+        x2 = F.relu(self.fc3_2(x2))
         # Training network to predict log(K) is more numerically stable
-        output2 = torch.log(F.softplus(self.fc3_2(x2)))
+        output2 = torch.log(F.softplus(self.fc4_2(x2)))
                 
         return output1,output2
     
 # Homoscedastic convnet model    
-class spConvnet(nn.Module):
+class spConvnet_subM (nn.Module):
     def __init__(self, shape):
-        super(spConvnet, self).__init__()
+        super(spConvnet_subM, self).__init__()
         self.net = spconv.SparseSequential(
-            spconv.SparseConv3d(in_channels=1, out_channels=50, kernel_size=6, stride=2, bias=True),
+            spconv.SubMConv3d(in_channels=1, out_channels=32, kernel_size=7, stride=1, bias=True),
+            nn.ReLU(),
+            spconv.SubMConv3d(in_channels=32, out_channels=40, kernel_size=5, stride=1, bias=True),
+            nn.ReLU(),
+            spconv.SparseConv3d(in_channels=40, out_channels=50, kernel_size=6, stride=2, bias=True),
             nn.ReLU(),
             spconv.SparseMaxPool3d(kernel_size=2, stride=2),
-            spconv.SparseConv3d(in_channels=50, out_channels=30, kernel_size=4, stride=1, bias=True),
+            spconv.SparseConv3d(in_channels=50, out_channels=30, kernel_size=3, stride=2, bias=True),
             nn.ReLU(),
-            spconv.SparseConv3d(in_channels=30, out_channels=20, kernel_size=3, stride=1, bias=True),
+            spconv.SparseConv3d(in_channels=30, out_channels=10, kernel_size=3, stride=1, bias=True),
             nn.ReLU(),
             spconv.SparseMaxPool3d(kernel_size=2, stride=2),
             spconv.ToDense(),
         )
-        self.fc1 = nn.Linear(12**3 *20, 100)
-        self.fc2 = nn.Linear(100, 30)
-        self.fc3 = nn.Linear(30, 3)
+        self.fc1 = nn.Linear(6**3 *10, 100)
+        self.fc2 = nn.Linear(100, 60)
+        self.fc3 = nn.Linear(60, 20)
+        self.fc4 = nn.Linear(20, 3)
         
         self.shape = shape
 
@@ -73,8 +87,9 @@ class spConvnet(nn.Module):
         x = self.net(x_sp)
         x = torch.flatten(x, 1) # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
-        x = torch.tanh(self.fc2(x))
-        output = F.normalize(self.fc3(x),dim=1)
+        x = F.relu(self.fc2(x))
+        x = torch.tanh(self.fc3(x))
+        output = F.normalize(self.fc4(x),dim=1)
         
         return output
     
