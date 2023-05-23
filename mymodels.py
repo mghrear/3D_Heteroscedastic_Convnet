@@ -108,7 +108,11 @@ def NML(x_vals, y_vals, z_vals, charges, true_dir, n_sigma_L = 1.5, n_sigma_H = 
     X = X-x_b
 
     # 2) Find principle axis
-    U1,S1,D1 =  np.linalg.svd(X)
+    # Use charges for weights
+    W = charges.reshape(len(charges),1)
+    # Compute weighted covariance matrix
+    WCM = ( (W*X).T @ X ) / np.sum(W)
+    U1,S1,D1 =  np.linalg.svd(WCM)
     v_PA = np.array([D1[0][0],D1[0][1],D1[0][2]])
     
     # 2)a. Compute second moment about principle axis 
