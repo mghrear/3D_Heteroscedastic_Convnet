@@ -92,7 +92,7 @@ def NLLloss(output, target):
     
     # target us the x parameters in the Kent distribution
     G = output[0] # \gamma_1 parameters in Kent distribution
-    K = torch.exp(output[1]) # \kappa parameters in Kent distribution
+    K = output[1] # \kappa parameter in Kent distribution
     
     # Compute negative log likelihood using Kent distribution
     loss = torch.mean( -1.0*torch.log(torch.div(K,4*torch.pi*torch.sinh(K))).flatten() - ( K.flatten() * torch.sum(G*target,dim=1) ) )
@@ -120,6 +120,42 @@ def train(dataloader, model, loss_fn, optimizer, device):
         # Backpropagation
         optimizer.zero_grad()
         loss.backward()
+        optimizer.step()
+            
+        train_loss += loss.item()
+            
+        if batch % 100 == 0:
+            loss, current = loss.item(), batch * len(X)
+            print(f"Current batch training loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+            
+    train_loss /= num_batches
+    print(f"Training loss: {train_loss:>7f}")
+    return(train_loss)
+
+def train_clip(dataloader, model, loss_fn, optimizer, device):
+    size = len(dataloader.dataset)
+    num_batches = len(dataloader)
+    model.train()
+    train_loss = 0
+    for batch, (X, y, offset) in enumerate(dataloader):
+        
+        X, y = X.type(torch.FloatTensor).to(device), y.to(device)
+        
+        X = X.coalesce()
+        indices = X.indices().permute(1, 0).contiguous().int()
+        features = X.values()
+            
+        # Compute prediction error
+        pred = model(features,indices,X.shape[0])
+        loss = loss_fn(pred, y)
+        
+        # Backpropagation
+        optimizer.zero_grad()
+        loss.backward()
+        
+        # Gradient Norm Clipping
+        nn.utils.clip_grad_norm_(model.parameters(), max_norm=50.0, norm_type=2)
+        
         optimizer.step()
             
         train_loss += loss.item()
@@ -174,7 +210,7 @@ def test_HSCDC(dataloader, model, device):
             pred = model(features, indices, X.shape[0])
 
             G = pred[0].to('cpu') # \gamma_1 parameters in Kent distribution
-            K = torch.exp(pred[1]).to('cpu') # \kappa parameters in Kent distribution
+            K = pred[1].to('cpu') # \kappa parameters in Kent distribution
             
             v_pred = torch.cat((v_pred,G), 0)
             K_pred = torch.cat((K_pred,K), 0)

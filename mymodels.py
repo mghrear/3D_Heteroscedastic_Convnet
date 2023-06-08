@@ -27,13 +27,13 @@ class spConvnet_HSCDC_subM(nn.Module):
             spconv.SparseMaxPool3d(kernel_size=2, stride=2),
             spconv.ToDense(),
         )
-        self.fc1 = nn.Linear(6**3 *10, 100)
-        self.fc2_1 = nn.Linear(100, 60)
-        self.fc3_1 = nn.Linear(60, 20)
-        self.fc4_1 = nn.Linear(20, 3)
-        self.fc2_2 = nn.Linear(100, 60)
-        self.fc3_2 = nn.Linear(60, 20)
-        self.fc4_2 = nn.Linear(20, 1)
+        self.fc1 = nn.Linear(6**3 *10, 500)
+        self.fc2_1 = nn.Linear(500, 200)
+        self.fc3_1 = nn.Linear(200, 50)
+        self.fc4_1 = nn.Linear(50, 3)
+        self.fc2_2 = nn.Linear(500, 200)
+        self.fc3_2 = nn.Linear(200, 50)
+        self.fc4_2 = nn.Linear(50, 1)
         
         self.shape = shape
 
@@ -50,7 +50,7 @@ class spConvnet_HSCDC_subM(nn.Module):
         x2 = F.relu(self.fc2_2(x))
         x2 = F.relu(self.fc3_2(x2))
         # Training network to predict log(K) is more numerically stable
-        output2 = torch.log(F.softplus(self.fc4_2(x2)))
+        output2 = F.softplus(self.fc4_2(x2))
                 
         return output1,output2
     
@@ -73,10 +73,10 @@ class spConvnet_subM (nn.Module):
             spconv.SparseMaxPool3d(kernel_size=2, stride=2),
             spconv.ToDense(),
         )
-        self.fc1 = nn.Linear(6**3 *10, 100)
-        self.fc2 = nn.Linear(100, 60)
-        self.fc3 = nn.Linear(60, 20)
-        self.fc4 = nn.Linear(20, 3)
+        self.fc1 = nn.Linear(6**3 *10, 500)
+        self.fc2 = nn.Linear(500, 200)
+        self.fc3 = nn.Linear(200, 50)
+        self.fc4 = nn.Linear(50, 3)
         
         self.shape = shape
 

@@ -7,7 +7,7 @@ import mymodels
 ########################################
 ########################################
 # Select Energy (40 or 50 keV)
-Energy = 40
+Energy = 50
 # Select diff amount (H or L)
 Diff = 'H'
 # Slecet cheat parameter True or False
