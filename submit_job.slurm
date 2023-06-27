@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=train_HSCDC
+#SBATCH --job-name=train_s1
 #SBATCH --partition=gpu
 #SBATCH --time=2-00:00:00 ## time format is DD-HH:MM:SS
 
@@ -18,4 +18,4 @@ module purge
 module load lang/Anaconda3/2022.05 
 module load tools/nmap/7.80
 source activate mypt
-jupyter nbconvert --to=notebook --inplace --ExecutePreprocessor.enabled=True 3D_HSCDC_CNN_tune_kappa.ipynb
+jupyter nbconvert --to=notebook --inplace --ExecutePreprocessor.enabled=True 3D_HSCDC_CNN_subM-256_small1.ipynb
