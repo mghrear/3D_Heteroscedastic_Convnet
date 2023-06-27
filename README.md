@@ -20,7 +20,7 @@ This script reads in raw simulations (stored in root files) and process them (in
 3. Mean-ceneters each simulation
 
 ## make_sparse_tensors.py
-This script reads the pickle files from process_data.py data and outputs sparse tensors in the COO format. It also outputs pickle files that store the coresponding labels (true directions), and other information (offset, energy, applied diffusion).
+This script reads the pickle files from process_data.py data and outputs PyTorch sparse tensors in the COO format. It also outputs pickle files that store the coresponding labels (true directions), and other information (offset, energy, applied diffusion).
 
 ## 3D_CNN_spconv.ipynb
 Notebook where I train the homoscedastic convnet.

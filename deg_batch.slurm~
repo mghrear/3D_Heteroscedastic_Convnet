@@ -1,18 +1,19 @@
-#!/bin/bash                                                                                                                      
-#SBATCH --job-name=degrad 
-#SBATCH --partition=shared                                                                                                       
-## 3 day max run time for public partitions, except 4 hour max runtime for the sandbox partition                                  
-#SBATCH --time=3-00:00:00 ## time format is DD-HH:MM:SS 
-#SBATCH --cpus-per-task=16                                                                           
-#SBATCH --mem=64G ## max amount of memory per node you require
-##SBATCH --core-spec=0 ## Uncomment to allow jobs to request all cores on a node
-#SBATCH --error=hello-%A.err ## %A - filled with jobid                                                                            
-#SBATCH --output=hello-%A.out ## %A - filled with jobid                                                                           
-## Useful for remote notification                                                                                                 
-#SBATCH --mail-type=BEGIN,END,FAIL,REQUEUE,TIME_LIMIT_80
-#SBATCH --mail-user=majd@hawaii.edu                              
-## All options and environment variables found on schedMD site: http://slurm.schedmd.com/sbatch.html
+#!/bin/bash
+#SBATCH --mail-user=majd@hawaii.edu
+#SBATCH --mail-type=BEGIN,END,FAIL
+#SBATCH --job-name=train_HSCDC
+#SBATCH --output=gpuTest_%j.out
+#SBATCH --error=gpuTest_%j.err
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=2
+#SBATCH --time=0-00:10:00       # format  HH:MM:SS
+#SBATCH --mem-per-cpu=10G
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu
 
 module purge
-module load data/ROOT/6.16.00-foss-2018b-Python-2.7.15
-python run_degrad_4.py
+module load lang/Anaconda3/2022.05 
+module load tools/nmap/7.80
+source activate mypt
+jupyter nbconvert --to=notebook --inplace --ExecutePreprocessor.enabled=True test.ipynb
+

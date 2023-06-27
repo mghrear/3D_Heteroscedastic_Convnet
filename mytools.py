@@ -1,6 +1,5 @@
 # Script containing functions, classes, and dictionaries that are used throughout.
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -94,10 +93,15 @@ def NLLloss(output, target):
     G = output[0] # \gamma_1 parameters in Kent distribution
     K = output[1] # \kappa parameter in Kent distribution
     
+    # We either use the true NLL loss (with loss1) or a very close approximation (with loss2) depending on whether loss1 = inf
+    loss1 = -1.0 * torch.log(torch.div(K,4*torch.pi*torch.sinh(K))).flatten()
+    loss2 = -1.0 * ( torch.log(torch.div(K,2*torch.pi)) - K ).flatten()
+    
     # Compute negative log likelihood using Kent distribution
-    loss = torch.mean( -1.0*torch.log(torch.div(K,4*torch.pi*torch.sinh(K))).flatten() - ( K.flatten() * torch.sum(G*target,dim=1) ) )
+    loss = torch.mean( torch.minimum(loss1,loss2) - ( K.flatten() * torch.sum(G*target,dim=1) ) )
     
     return loss
+
 
 # Training Loop
 def train(dataloader, model, loss_fn, optimizer, device):
@@ -105,6 +109,8 @@ def train(dataloader, model, loss_fn, optimizer, device):
     num_batches = len(dataloader)
     model.train()
     train_loss = 0
+    skip_flag = False
+    
     for batch, (X, y, offset) in enumerate(dataloader):
         
         X, y = X.type(torch.FloatTensor).to(device), y.to(device)
@@ -120,7 +126,22 @@ def train(dataloader, model, loss_fn, optimizer, device):
         # Backpropagation
         optimizer.zero_grad()
         loss.backward()
-        optimizer.step()
+        
+        # Check for Nans in gradient (this sometimes happens for the heteroscedastic model)
+        for name, param in model.named_parameters():
+            # Only check parameters requiring grad
+            if param.requires_grad:
+                if torch.isnan(param.grad).any():
+                    print("Warning: nan gradient found. The current loss is: ", loss.item())
+                    skip_flag = True
+                    break
+        
+        # Only update weights if there is no nans in gradient
+        if skip_flag == False:
+            optimizer.step()
+        # Otherwise skip this update and reset skip_flag
+        else:
+            skip_flag = False
             
         train_loss += loss.item()
             
@@ -132,41 +153,6 @@ def train(dataloader, model, loss_fn, optimizer, device):
     print(f"Training loss: {train_loss:>7f}")
     return(train_loss)
 
-def train_clip(dataloader, model, loss_fn, optimizer, device):
-    size = len(dataloader.dataset)
-    num_batches = len(dataloader)
-    model.train()
-    train_loss = 0
-    for batch, (X, y, offset) in enumerate(dataloader):
-        
-        X, y = X.type(torch.FloatTensor).to(device), y.to(device)
-        
-        X = X.coalesce()
-        indices = X.indices().permute(1, 0).contiguous().int()
-        features = X.values()
-            
-        # Compute prediction error
-        pred = model(features,indices,X.shape[0])
-        loss = loss_fn(pred, y)
-        
-        # Backpropagation
-        optimizer.zero_grad()
-        loss.backward()
-        
-        # Gradient Norm Clipping
-        nn.utils.clip_grad_norm_(model.parameters(), max_norm=50.0, norm_type=2)
-        
-        optimizer.step()
-            
-        train_loss += loss.item()
-            
-        if batch % 100 == 0:
-            loss, current = loss.item(), batch * len(X)
-            print(f"Current batch training loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-            
-    train_loss /= num_batches
-    print(f"Training loss: {train_loss:>7f}")
-    return(train_loss)
 
 # Validation Loop
 def validate(dataloader, model, loss_fn, device):
@@ -259,6 +245,23 @@ def test_NML(dataframe, model, n_sigma_L = 1.5, n_sigma_H = 3, w_o = 0.05, cheat
             v_pred += [v_p]
             v_true += [row.dir]
             off_true += [row.offset]
+            
+    v_pred, v_true, off_true = np.asarray(v_pred), np.asarray(v_true), np.asarray(off_true)
+    
+    return v_pred, v_true, off_true
+
+# Test Loop for non-ML2 model
+def test_NML2(dataframe, model, eps):
+    
+    v_pred, v_true, off_true = [], [], []
+    
+    for index, row in dataframe.iterrows():
+        
+        v_p = model(row.positions[0],row.positions[1],row.positions[2],row.charges, row.dir, row.offset, eps)
+
+        v_pred += [v_p]
+        v_true += [row.dir]
+        off_true += [row.offset]
             
     v_pred, v_true, off_true = np.asarray(v_pred), np.asarray(v_true), np.asarray(off_true)
     

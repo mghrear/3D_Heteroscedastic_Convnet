@@ -49,7 +49,6 @@ class spConvnet_HSCDC_subM(nn.Module):
         output1 = F.normalize(self.fc4_1(x1),dim=1)
         x2 = F.relu(self.fc2_2(x))
         x2 = F.relu(self.fc3_2(x2))
-        # Training network to predict log(K) is more numerically stable
         output2 = F.softplus(self.fc4_2(x2))
                 
         return output1,output2
@@ -160,3 +159,38 @@ def NML(x_vals, y_vals, z_vals, charges, true_dir, n_sigma_L = 1.5, n_sigma_H = 
 
         # Return initial direction prediction and True flag
         return v_IP, True
+    
+
+# Method for determining the initial direction of an electron recoil without ML
+def NML2 (x_vals, y_vals, z_vals, charges, true_dir, offset, eps):
+    
+    # Shift starting point of recoil to origin
+    x_vals = x_vals - offset[0]
+    y_vals = y_vals - offset[1]
+    z_vals = z_vals - offset[2]
+    
+    # Idenitfy points within eps of origin
+    T_arr = np.sqrt(x_vals**2+y_vals**2+z_vals**2) < eps
+    
+    # Keep only points within eps of origin
+    charges = charges[T_arr]
+    X = np.array([x_vals[T_arr],y_vals[T_arr],z_vals[T_arr]]).T
+    
+    # Center on barycenter
+    x_b = np.sum(X*(charges.reshape(len(charges),1)),axis=0)/np.sum(charges)
+    
+    # Shift data to barycenter
+    X = X-x_b
+    
+    # Find principle axis
+    # Use charges for weights
+    W = charges.reshape(len(charges),1)
+    # Compute weighted covariance matrix
+    WCM = ( (W*X).T @ X ) / np.sum(W)
+    U1,S1,D1 =  np.linalg.svd(WCM)
+    v_PA = np.array([D1[0][0],D1[0][1],D1[0][2]])
+    
+    # Assign correct head-tail to the principle axis
+    v_PA = np.sign( np.dot(v_PA,true_dir) ) * v_PA
+
+    return v_PA
