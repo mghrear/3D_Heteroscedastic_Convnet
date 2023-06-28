@@ -46,6 +46,39 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
 
     plt.show()
 
+# Plot an arrow in 3D
+def plot_arrow(x_points, y_points, z_points):
+
+    # Plot the track
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.scatter3D(x_points, y_points, z_points, c='k', marker='o')
+
+    ax.set_xlabel('x [cm]')
+    ax.set_ylabel('y [cm]')
+    ax.set_zlabel('z [cm]')
+    
+    eps = 1e-16
+    ax.axes.set_xlim3d(left=-60.-eps, right=60+eps)
+    ax.axes.set_ylim3d(bottom=-60.-eps, top=60+eps) 
+    ax.axes.set_zlim3d(bottom=-60.-eps, top=60+eps)
+
+    plt.tight_layout()
+
+
+    plt.show()
+
+# Plot a voxel grid of the arrow
+def vox_plot_arrow(tensor, eff_l, vox_l):
+
+
+    fig = plt.figure(figsize=(10, 10))
+    ax = plt.axes(projection='3d')
+
+    ax.voxels(tensor[0,:,:,:])
+
+    plt.show()
+
 # Rotation matrices about z and y
 R_z = lambda ang: np.array( [[np.cos(ang),-np.sin(ang),0],[np.sin(ang),np.cos(ang),0],[0,0,1]] )
 R_y = lambda ang: np.array( [[np.cos(ang),0,np.sin(ang)],[0,1,0],[-np.sin(ang),0,np.cos(ang)]] )
