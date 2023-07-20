@@ -6,11 +6,12 @@ from mpl_toolkits.mplot3d import Axes3D
 import torch
 from torch import nn
 import pandas as pd
+from torch.masked import masked_tensor, as_masked_tensor
 
 # Here we define the pixel grid parameters used throughout
 voxel_grid = {
-  "eff_l": 3.0, # x/y/z length being kept in cm
-  "vox_l": 0.05, # cubic voxel length in cm
+  "eff_l": 3.0, # x/y/z total length in cm
+  "vox_l": 0.05,# x/y/z cubic voxel length in cm
 }
 
 # Plot a point cloud as well as an arrow indicating the initial direction
@@ -120,18 +121,72 @@ def CSloss(output, target):
     return loss
 
 # Negative Log Likelihood Loss for HSCDC convnet
+# Loss1 is the true loss function and loss2 is a very close approximation for high K
+# Loss1 is unstable, when loss1 = inf, torch.minimum will select loss2 instead
+# However, the gradient of the torch.miniumum is unstable when one argument is inf so this doesn't work
 def NLLloss(output, target):
     
     # target us the x parameters in the Kent distribution
     G = output[0] # \gamma_1 parameters in Kent distribution
-    K = output[1] # \kappa parameter in Kent distribution
+    K = output[1].flatten() # \kappa parameter in Kent distribution
     
     # We either use the true NLL loss (with loss1) or a very close approximation (with loss2) depending on whether loss1 = inf
-    loss1 = -1.0 * torch.log(torch.div(K,4*torch.pi*torch.sinh(K))).flatten()
-    loss2 = -1.0 * ( torch.log(torch.div(K,2*torch.pi)) - K ).flatten()
+    loss1 = -1.0 * torch.log(torch.div(K,4*torch.pi*torch.sinh(K)))
+    loss2 = -1.0 * ( torch.log(torch.div(K,2*torch.pi)) - K )
     
     # Compute negative log likelihood using Kent distribution
-    loss = torch.mean( torch.minimum(loss1,loss2) - ( K.flatten() * torch.sum(G*target,dim=1) ) )
+    loss = torch.mean( torch.minimum(loss1,loss2) - ( K * torch.sum(G*target,dim=1) ) )
+    
+    return loss
+
+
+# Negative Log Likelihood Loss for HSCDC convnet
+# This implementation uses pytorch masked tensors not functions are implemented with masked tensors so this doesn't work
+def NLLloss_masked(output, target):
+    
+    # target us the x parameters in the Kent distribution
+    G = output[0] # \gamma_1 parameters in Kent distribution
+    K = output[1].flatten() # \kappa parameter in Kent distribution
+    
+    loss1 = -1.0 * torch.log(torch.div(K,4*torch.pi*torch.sinh(K)))
+    loss2 = -1.0 * ( torch.log(torch.div(K,2*torch.pi)) - K )
+    
+    mask = K<40.0
+    
+    mx = masked_tensor(loss1.clone().detach(), mask)
+    my = masked_tensor(loss2.clone().detach(), ~mask)
+    
+    loss_K = torch.where(mask, mx, my)
+    
+        
+    # Compute negative log likelihood using Kent distribution
+    loss = torch.mean( loss_K - ( K * torch.sum(G*target,dim=1) ))
+    
+    
+    return loss
+
+# Negative Log Likelihood Loss for HSCDC convnet
+# Loss1 is a 15ht order Taylor series about K=0, loss2 is a very close approximation for high K
+# To aviod instabilities we either use Loss1 or Loss2, never the true expression for loss
+# With this treatement the maximum error on the loss occers when K=2.65, the true loss is 3.5083 and both approximations are off by 0.005
+# This method works
+def NLLloss_TS(output, target):
+    
+    # target us the x parameters in the Kent distribution
+    G = output[0] # \gamma_1 parameters in Kent distribution
+    K = output[1].flatten() # \kappa parameter in Kent distribution
+    
+    # 15th order taylor series about 0
+    loss1 = K**2/6 - K**4/180 + K**6/2835 - K**8/37800 + K**10/467775 - (691* (K**12) )/ 3831077250 + (2 * (K**14))/127702575 + torch.log(torch.tensor(4)*torch.pi)
+    # high K approx
+    loss2 = -1.0 * ( torch.log(torch.div(K,2*torch.pi)) - K )
+    
+    loss_K = torch.where(K<2.65, loss1, loss2)
+    
+        
+    # Compute negative log likelihood using Kent distribution
+    loss = torch.mean( loss_K  - ( K * torch.sum(G*target,dim=1) ))
+    
     
     return loss
 

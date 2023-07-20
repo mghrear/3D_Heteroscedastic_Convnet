@@ -1,7 +1,7 @@
 #!/bin/bash
-#SBATCH --job-name=train_s1
+#SBATCH --job-name=train_TS
 #SBATCH --partition=gpu
-#SBATCH --time=2-00:00:00 ## time format is DD-HH:MM:SS
+#SBATCH --time=3-00:00:00 ## time format is DD-HH:MM:SS
 
 #SBATCH --mail-user=majd@hawaii.edu
 #SBATCH --mail-type=BEGIN,END,FAIL,REQUEUE,TIME_LIMIT_80
@@ -18,4 +18,4 @@ module purge
 module load lang/Anaconda3/2022.05 
 module load tools/nmap/7.80
 source activate mypt
-jupyter nbconvert --to=notebook --inplace --ExecutePreprocessor.enabled=True 3D_HSCDC_CNN_subM-256_small1.ipynb
+jupyter nbconvert --to=notebook --inplace --ExecutePreprocessor.enabled=True 3D_HSCDC_tune_kappa.ipynb

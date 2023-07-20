@@ -20,12 +20,21 @@ This script reads in raw simulations (stored in root files) and process them (in
 3. Mean-ceneters each simulation
 
 ## make_sparse_tensors.py
-This script reads the pickle files from process_data.py data and outputs sparse tensors in the COO format. It also outputs pickle files that store the coresponding labels (true directions), and other information (offset, energy, applied diffusion).
+This script reads the pickle files from process_data.py data and outputs PyTorch sparse tensors in the COO format. It also outputs pickle files that store the coresponding labels (true directions), and other information (offset, energy, applied diffusion).
 
-## 3D_CNN_spconv.ipynb
+## arrow_generator.ipynb
+Generates arrows for a simple test case
+
+## explain_nan_issue.ipynb
+
+## 3D_CNN_arrows.ipynb
+
+## 3D_HSCDC_arrows.ipynb
+
+## 3D_CNN.ipynb
 Notebook where I train the homoscedastic convnet.
 
-## 3D_HSCDC_CNN_spconv.ipynb
+## 3D_HSCDC.ipynb
 Notebook where I train the heteroscedastic convnet.
 
 ## tune_NML.py
@@ -34,3 +43,7 @@ A script used to tune the parameters of the non-ML model via gridsearch.
 ## test_models.ipynb
 A notebook for testing and comparing all models.
 
+## test_arrows.ipynb
+
+
+## test_kappa.ipynb
