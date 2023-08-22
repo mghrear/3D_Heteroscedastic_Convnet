@@ -163,6 +163,7 @@ def NML(x_vals, y_vals, z_vals, charges, true_dir, n_sigma_L = 1.5, n_sigma_H = 
     
 
 # Method for determining the initial direction of an electron recoil without ML
+# This is a "cheat" method which uses information that is not experimentally available
 def NML2 (x_vals, y_vals, z_vals, charges, true_dir, offset, eps):
     
     # Shift starting point of recoil to origin
