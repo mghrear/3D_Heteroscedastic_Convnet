@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import torch
 from torch import nn
 import pandas as pd
-from torch.masked import masked_tensor, as_masked_tensor
+#from torch.masked import masked_tensor, as_masked_tensor
 
 # Here we define the pixel grid parameters used throughout
 voxel_grid = {
@@ -20,7 +20,7 @@ def plot_track_dir(x_points, y_points, z_points, start, direction):
     # Plot the track
     fig = plt.figure()
     ax = plt.axes(projection='3d')
-    ax.scatter3D(x_points, y_points, z_points, c='k', marker='o')
+    
 
     ax.set_xlabel('x [cm]')
     ax.set_ylabel('y [cm]')
@@ -28,7 +28,8 @@ def plot_track_dir(x_points, y_points, z_points, start, direction):
     plt.tight_layout()
 
     # Add red line for true direction
-    ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=3, color = 'red')
+    ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
+    ax.scatter3D(x_points, y_points, z_points, c='k', marker='o', alpha=0.1)
 
     plt.show()
 
@@ -42,8 +43,8 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
     fig = plt.figure(figsize=(10, 10))
     ax = plt.axes(projection='3d')
 
-    ax.voxels(tensor[0,:,:,:])
-    ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=3, color = 'red')
+    ax.voxels(tensor[0,:,:,:],alpha=0.6)
+    ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
 
     plt.show()
 
