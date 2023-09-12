@@ -116,9 +116,9 @@ def NML(x_vals, y_vals, z_vals, charges, true_dir, n_sigma_L = 1.5, n_sigma_H = 
     v_PA = np.array([D1[0][0],D1[0][1],D1[0][2]])
     
     # 2)a. Compute second moment about principle axis 
+    M_2 = S1[0]
+    # 2)b. Compute third moment about principle axis
     X_proj = X@v_PA
-    M_2 = np.sum( charges * ( X_proj**2 ) ) / np.sum(charges)
-    # 2)b. Compute third moment about principle axis 
     M_3 = np.sum( charges * ( X_proj**3 ) ) / np.sum(charges)
 
     # 3) keep only points where projected sign is same as sgn(M3) and n_sigma_L M_2 <|proj_i| < n_sigma_H M2
