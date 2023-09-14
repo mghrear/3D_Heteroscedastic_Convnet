@@ -29,25 +29,35 @@ Generates arrows for a simple test case
 ## explain_nan_issue.ipynb
 A jupyter notebook that illustrates some of the practicle issues encountered while training our models
 
-## 3D_CNN_arrows.ipynb
-Notebook where I train the homoscedastic convnet on the simple arrow test case.
+## RCN_arrows.ipynb
+Notebook where we train a regular (homoscedastic) convnet on a simple test case. Here the convnet quickly learns to predict the directions of 3D arrows.
 
-## 3D_HSCDC_arrows.ipynb
-Notebook where I train the heteroscedastic convnet on the simple arrow test case.
+## HCN_arrows.ipynb
+Notebook where we train a heteroscedastic convnet on a simple test case. Here the convnet quickly learns to predict the direction of 3D arrows with a very small directional uncertainty.
 
-## 3D_CNN.ipynb
-Notebook where I train the homoscedastic convnet on electron recoils.
+## RCN.ipynb
+Notebook where I train the regular (homoscedastic) convnet on electron recoils.
 
-## 3D_HSCDC.ipynb
+## HCN.ipynb
 Notebook where I train the heteroscedastic convnet on electron recoils.
 
 ## tune_NML.py
 A script used to tune the parameters of the non-ML model via gridsearch.
 
+## tune_NML2.py
+A script used to tune the epsilon parameter of the "cheat" method.
+
 ## test_models.ipynb
 A notebook for testing and comparing all models.
 
 ## test_arrows.ipynb
-
+A notebook for testing the RCN and HCN models on the simple case of detecting arrow directions.
 
 ## test_kappa.ipynb
+A notebook for testing the uncertainty predictions of the HCN model.
+
+## make_NNplots.py
+A python script for plotting the dense portions of the RCN and HCN models.
+
+## submit_job.slurm
+A slurm script for queuing jobs that run a jupyter notebook.
