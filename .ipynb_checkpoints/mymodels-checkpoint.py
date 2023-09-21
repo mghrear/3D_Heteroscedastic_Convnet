@@ -52,6 +52,8 @@ class spConvnet_HSCDC_subM(nn.Module):
         output2 = F.softplus(self.fc4_2(x2))
                 
         return output1,output2
+    
+
 
     
 # Homoscedastic convnet model    
