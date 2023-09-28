@@ -222,6 +222,7 @@ def train(dataloader, model, loss_fn, optimizer, device):
             if param.requires_grad:
                 if torch.isnan(param.grad).any():
                     print("Warning: nan gradient found. The current loss is: ", loss.item())
+                    print("To avoid this, continue training with a lower order Taylor Series in the NLL loss")
                     skip_flag = True
                     break
         
