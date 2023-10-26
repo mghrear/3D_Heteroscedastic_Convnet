@@ -36,10 +36,10 @@ Notebook where we train a regular (homoscedastic) convnet on a simple test case.
 Notebook where we train a heteroscedastic convnet on a simple test case. Here the convnet quickly learns to predict the direction of 3D arrows with a very small directional uncertainty.
 
 ## RCN.ipynb
-Notebook where I train the regular (homoscedastic) convnet on electron recoils.
+Notebook where we train the regular (homoscedastic) convnet on electron recoils.
 
 ## HCN.ipynb
-Notebook where I train the heteroscedastic convnet on electron recoils.
+Notebook where we train the heteroscedastic convnet on electron recoils.
 
 ## tune_NML.py
 A script used to tune the parameters of the non-ML model via gridsearch.
@@ -57,7 +57,7 @@ A notebook for testing the RCN and HCN models on the simple case of detecting ar
 A notebook for testing the uncertainty predictions of the HCN model.
 
 ## make_NNplots.py
-A python script for plotting the dense portions of the RCN and HCN models.
+A python script for illustrating the dense portions of the RCN and HCN models.
 
 ## submit_job.slurm
 A slurm script for queuing jobs that run a jupyter notebook.
