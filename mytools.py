@@ -31,7 +31,6 @@ def plot_track_dir(x_points, y_points, z_points, start, direction):
     ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
     ax.scatter3D(x_points, y_points, z_points, c='k', marker='o', alpha=0.1)
 
-    plt.show()
 
 
 # Plot a voxel grid as well as an arrow indicating the initial direction
@@ -45,8 +44,10 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
 
     ax.voxels(tensor[0,:,:,:],alpha=0.6)
     ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
+    
+    plt.tight_layout()
 
-    plt.show()
+
 
 # Plot an arrow in 3D
 def plot_arrow(x_points, y_points, z_points):
@@ -68,7 +69,6 @@ def plot_arrow(x_points, y_points, z_points):
     plt.tight_layout()
 
 
-    plt.show()
 
 # Plot a voxel grid of the arrow
 def vox_plot_arrow(tensor, eff_l, vox_l):
@@ -79,7 +79,6 @@ def vox_plot_arrow(tensor, eff_l, vox_l):
 
     ax.voxels(tensor[0,:,:,:])
 
-    plt.show()
 
 # Rotation matrices about z and y
 R_z = lambda ang: np.array( [[np.cos(ang),-np.sin(ang),0],[np.sin(ang),np.cos(ang),0],[0,0,1]] )
