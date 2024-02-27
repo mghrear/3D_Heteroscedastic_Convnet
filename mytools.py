@@ -22,9 +22,10 @@ def plot_track_dir(x_points, y_points, z_points, start, direction):
     ax = plt.axes(projection='3d')
     
 
-    ax.set_xlabel('x [cm]')
-    ax.set_ylabel('y [cm]')
-    ax.set_zlabel('z [cm]')
+    ax.set_xlabel('x [cm]',fontsize=15)
+    ax.set_ylabel('y [cm]',fontsize=15)
+    ax.set_zlabel('z [cm]',fontsize=15)
+    ax.tick_params(labelsize=12)
     plt.tight_layout()
 
     # Add red line for true direction
@@ -41,6 +42,12 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
 
     fig = plt.figure(figsize=(10, 10))
     ax = plt.axes(projection='3d')
+
+    ax.set_xlabel('x',labelpad = 20,fontsize=25)
+    ax.set_ylabel('y',labelpad = 20,fontsize=25)
+    ax.set_zlabel('z',labelpad = 20,fontsize=25)
+    ax.tick_params(labelsize=20)
+    plt.tight_layout()
 
     ax.voxels(tensor[0,:,:,:],alpha=0.6)
     ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
