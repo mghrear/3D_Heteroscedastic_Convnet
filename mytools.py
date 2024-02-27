@@ -84,6 +84,12 @@ def vox_plot_arrow(tensor, eff_l, vox_l):
     fig = plt.figure(figsize=(10, 10))
     ax = plt.axes(projection='3d')
 
+    ax.set_xlabel('x',labelpad = 20,fontsize=25)
+    ax.set_ylabel('y',labelpad = 20,fontsize=25)
+    ax.set_zlabel('z',labelpad = 20,fontsize=25)
+    ax.tick_params(labelsize=20)
+    plt.tight_layout()
+
     ax.voxels(tensor[0,:,:,:])
 
 
