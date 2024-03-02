@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=train_HCN
+#SBATCH --job-name=tune_alpha
 #SBATCH --partition=gpu
 #SBATCH --time=3-00:00:00 ## time format is DD-HH:MM:SS
 
@@ -12,10 +12,10 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=2
 #SBATCH --mem-per-cpu=10G
-#SBATCH --gres=gpu:NV-RTX5000
+## SBATCH --gres=gpu:NV-RTX5000
+#SBATCH --gres=gpu:1
 
 module purge
-module load lang/Anaconda3/2022.05 
-module load tools/nmap/7.80
+module load lang/Anaconda3/2023.03-1
 source activate mypt
-jupyter nbconvert --to=notebook --inplace --ExecutePreprocessor.enabled=True HCN.ipynb
+jupyter nbconvert --to=notebook --inplace --ExecutePreprocessor.enabled=True RCN-alpha_e1.ipynb
