@@ -6,8 +6,8 @@ Contains functions, classes, and dictionaries that are used throughout.
 
 ## mymodels.py
 Contains all models, which includes:
-1. spConvnet_HSCDC_subM: A heteroscedastic convnet for probabilistic direction predictions
-2. spConvnet_subM: A homoscedastic convnet for point estimate predictions
+1. spConvnet_HSCDC_subM: A heteroscedastic convnet for probabilistic direction predictions (HCN)
+2. spConvnet_subM: A homoscedastic convnet for point estimate predictions (RCN)
 3. NML: A non-ML algorithim originally developed for X-ray polarimetry
 4. NML2: A "cheat" method which uses information that is only available in simulation to estimate the best expected performance
 
@@ -30,22 +30,22 @@ Defines and generates a data set of arrows pointing in random direction for the 
 A jupyter notebook that illustrates some of the practicle issues encountered while training the heterscedastic model
 
 ## RCN_arrows.ipynb
-Notebook where we train a regular (homoscedastic) convnet on a toy test case (arrows). Here the convnet quickly learns to predict the directions of 3D arrows.
+Notebook where we train the RCN model on a toy test case (arrows). Here the convnet quickly learns to predict the directions of 3D arrows.
 
 ## HCN_arrows.ipynb
-Notebook where we train a heteroscedastic convnet on a toy test case (arrows). Here the convnet quickly learns to predict the direction of 3D arrows with a very small directional uncertainty.
+Notebook where we train the HCN on a toy test case (arrows). Here the convnet quickly learns to predict the direction of 3D arrows with a very small directional uncertainty.
 
 ## RCN.ipynb
-Notebook where we train the regular (homoscedastic) convnet on electron simulations.
+Notebook where we train the RNC model on electron simulations.
 
 ## HCN.ipynb
-Notebook where we train the heteroscedastic convnet on electron simulations.
+Notebook where we train the RCN model on electron simulations.
 
 ## tune_NML.py
 A script used to tune the parameters of the non-ML algorithim originally developed for X-ray polarimetry.
 
 ## tune_NML2.py
-A script used to tune te "cheat" method which uses information that is only available in simulation to estimate the best expected performance
+A script used to tune the "cheat" method which uses information that is only available in simulation to estimate the best expected performance
 
 ## test_models.ipynb
 A notebook for testing and comparing all models on the electron simulation test sets.
@@ -58,9 +58,6 @@ A notebook for testing the calibration of the HCN model.
 
 ## make_NNplots.py
 A python script that creates figures depicting the dense portions of the RCN and HCN models.
-
-## plot_loss_functions.ipynb
-A notebook that plots loss function to illustrate the issue with predicting distribtion over the theta and phi angles seperately. Our framework avoids this by predicting distributions on S2.
 
 ## submit_job.slurm
 A slurm script for queuing jobs that run a jupyter notebook.

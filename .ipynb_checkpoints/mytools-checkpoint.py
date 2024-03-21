@@ -15,7 +15,7 @@ voxel_grid = {
 }
 
 # Plot a point cloud as well as an arrow indicating the initial direction
-def plot_track_dir(x_points, y_points, z_points, start, direction):
+def plot_track_dir(x_points, y_points, z_points,  start, direction, xlim = (-1,3), ylim = (-1,3), zlim = (-1,3)):
 
     # Plot the track
     fig = plt.figure()
@@ -26,11 +26,14 @@ def plot_track_dir(x_points, y_points, z_points, start, direction):
     ax.set_ylabel('y [cm]',fontsize=15)
     ax.set_zlabel('z [cm]',fontsize=15)
     ax.tick_params(labelsize=12)
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_zlim(zlim)
     plt.tight_layout()
 
     # Add red line for true direction
     ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
-    ax.scatter3D(x_points, y_points, z_points, c='k', marker='o', alpha=0.1)
+    ax.scatter3D(x_points, y_points, z_points, s = 4, c='k', marker='o', alpha=0.1)
 
 
 
@@ -43,13 +46,14 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
     fig = plt.figure(figsize=(10, 10))
     ax = plt.axes(projection='3d')
 
-    ax.set_xlabel('x',labelpad = 20,fontsize=25)
-    ax.set_ylabel('y',labelpad = 20,fontsize=25)
-    ax.set_zlabel('z',labelpad = 20,fontsize=25)
+    ax.set_xlabel('x',labelpad = 20,fontsize=35)
+    ax.set_ylabel('y',labelpad = 20,fontsize=35)
+    ax.set_zlabel('z',labelpad = 20,fontsize=35)
     ax.tick_params(labelsize=20)
+    ax.set_box_aspect(None, zoom=0.85)
     plt.tight_layout()
 
-    ax.voxels(tensor[0,:,:,:],alpha=0.6)
+    ax.voxels(tensor[0,:,:,:],alpha=0.3)
     ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
     
     plt.tight_layout()
@@ -133,15 +137,6 @@ def CSloss(output, target):
     loss = torch.mean(-1.0*CS(output,target))
     return loss
 
-# Cosine Similarity Loss for regular convnet
-def CSloss_alpha(output, target,alpha):
-    
-    pre_output = output[0] #output before L2 norm
-    post_output = output[1] #output after L2 norm
-    
-    loss = torch.mean(-1.0*CS(post_output,target) + alpha * (torch.norm(pre_output,dim=1)-1)**2) # Adding Peter's penalty term
-    
-    return loss
 
 # Negative Log Likelihood Loss for HSCDC convnet
 # Loss1 is the true loss function and loss2 is a very close approximation for high K
@@ -265,59 +260,6 @@ def train(dataloader, model, loss_fn, optimizer, device):
     print(f"Training loss: {train_loss:>7f}")
     return(train_loss)
 
-# Training Loop
-def train_alpha(dataloader, model, loss_fn, optimizer, device,alpha):
-    size = len(dataloader.dataset)
-    num_batches = len(dataloader)
-    model.train()
-    train_loss = 0
-    skip_flag = False
-    
-    for batch, (X, y, offset) in enumerate(dataloader):
-        
-        X, y = X.type(torch.FloatTensor).to(device), y.to(device)
-        
-        X = X.coalesce()
-        indices = X.indices().permute(1, 0).contiguous().int()
-        features = X.values()
-            
-        # Compute prediction error
-        pred = model(features,indices,X.shape[0])
-        loss = loss_fn(pred, y,alpha)
-        
-        # Backpropagation
-        optimizer.zero_grad()
-        loss.backward()
-        
-        # Check for Nans in gradient (this sometimes happens for the heteroscedastic model)
-        for name, param in model.named_parameters():
-            # Only check parameters requiring grad
-            if param.requires_grad:
-                if torch.isnan(param.grad).any():
-                    print("Warning: nan gradient found. The current loss is: ", loss.item())
-                    print("To avoid this, continue training with a lower order Taylor Series in the NLL loss")
-                    skip_flag = True
-                    break
-        
-        # Only update weights if there is no nans in gradient
-        if skip_flag == False:
-            optimizer.step()
-        # Otherwise skip this update and reset skip_flag
-        else:
-            skip_flag = False
-            
-        train_loss += loss.item()
-            
-        if batch % 100 == 0:
-            loss, current = loss.item(), batch * len(X)
-            print(f"Current batch training loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
-            
-    train_loss /= num_batches
-    print(f"Training loss: {train_loss:>7f}")
-    return(train_loss)
-
-
-
 
 # Validation Loop
 def validate(dataloader, model, loss_fn, device):
@@ -335,27 +277,6 @@ def validate(dataloader, model, loss_fn, device):
             pred = model(features, indices, X.shape[0])
 
             val_loss += loss_fn(pred, y).item()
-            
-    val_loss /= num_batches
-    print(f"Validation loss: {val_loss:>7f} \n")
-    return(val_loss)
-
-# Validation Loop
-def validate_alpha(dataloader, model, loss_fn, device,alpha):
-    num_batches = len(dataloader)
-    model.eval()
-    val_loss = 0
-    with torch.no_grad():
-        for X, y, offset in dataloader:
-            X, y = X.type(torch.FloatTensor).to(device), y.to(device)
-            
-            X = X.coalesce()
-            indices = X.indices().permute(1, 0).contiguous().int()
-            features = X.values()
-            
-            pred = model(features, indices, X.shape[0])
-
-            val_loss += loss_fn(pred, y,alpha).item()
             
     val_loss /= num_batches
     print(f"Validation loss: {val_loss:>7f} \n")
@@ -415,29 +336,7 @@ def test_CNN(dataloader, model, device):
 
     return v_pred, v_true, off_true
 
-# Test Loop homoscedastic convnet model
-def test_CNN_alpha(dataloader, model, device):
-    v_pred = torch.Tensor([])
-    v_true = torch.Tensor([])
-    off_true = torch.Tensor([])
 
-    num_batches = len(dataloader)
-    model.eval()
-    with torch.no_grad():
-        for X, y, offset in dataloader:
-            X = X.type(torch.FloatTensor).to(device)
-            
-            X = X.coalesce()
-            indices = X.indices().permute(1, 0).contiguous().int()
-            features = X.values()
-            
-            pred = model(features, indices, X.shape[0])[1].to('cpu')
-            
-            v_pred = torch.cat((v_pred,pred), 0)
-            v_true = torch.cat((v_true,y), 0)
-            off_true = torch.cat((off_true,offset), 0)
-
-    return v_pred, v_true, off_true
 
 # Test Loop for non-ML model
 def test_NML(dataframe, model, n_sigma_L = 1.5, n_sigma_H = 3, w_o = 0.05, cheat=False):
