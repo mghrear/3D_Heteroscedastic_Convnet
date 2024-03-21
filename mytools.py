@@ -15,7 +15,7 @@ voxel_grid = {
 }
 
 # Plot a point cloud as well as an arrow indicating the initial direction
-def plot_track_dir(x_points, y_points, z_points, start, direction):
+def plot_track_dir(x_points, y_points, z_points,  start, direction, xlim = (-1,3), ylim = (-1,3), zlim = (-1,3)):
 
     # Plot the track
     fig = plt.figure()
@@ -26,11 +26,14 @@ def plot_track_dir(x_points, y_points, z_points, start, direction):
     ax.set_ylabel('y [cm]',fontsize=15)
     ax.set_zlabel('z [cm]',fontsize=15)
     ax.tick_params(labelsize=12)
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+    ax.set_zlim(zlim)
     plt.tight_layout()
 
     # Add red line for true direction
     ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
-    ax.scatter3D(x_points, y_points, z_points, c='k', marker='o', alpha=0.1)
+    ax.scatter3D(x_points, y_points, z_points, s = 4, c='k', marker='o', alpha=0.1)
 
 
 
