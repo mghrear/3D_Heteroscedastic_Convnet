@@ -415,6 +415,30 @@ def test_CNN(dataloader, model, device):
 
     return v_pred, v_true, off_true
 
+# Test Loop homoscedastic convnet model
+def test_CNN_alpha(dataloader, model, device):
+    v_pred = torch.Tensor([])
+    v_true = torch.Tensor([])
+    off_true = torch.Tensor([])
+
+    num_batches = len(dataloader)
+    model.eval()
+    with torch.no_grad():
+        for X, y, offset in dataloader:
+            X = X.type(torch.FloatTensor).to(device)
+            
+            X = X.coalesce()
+            indices = X.indices().permute(1, 0).contiguous().int()
+            features = X.values()
+            
+            pred = model(features, indices, X.shape[0])[1].to('cpu')
+            
+            v_pred = torch.cat((v_pred,pred), 0)
+            v_true = torch.cat((v_true,y), 0)
+            off_true = torch.cat((off_true,offset), 0)
+
+    return v_pred, v_true, off_true
+
 # Test Loop for non-ML model
 def test_NML(dataframe, model, n_sigma_L = 1.5, n_sigma_H = 3, w_o = 0.05, cheat=False):
     
