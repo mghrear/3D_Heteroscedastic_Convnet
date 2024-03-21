@@ -46,13 +46,14 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
     fig = plt.figure(figsize=(10, 10))
     ax = plt.axes(projection='3d')
 
-    ax.set_xlabel('x',labelpad = 20,fontsize=25)
-    ax.set_ylabel('y',labelpad = 20,fontsize=25)
-    ax.set_zlabel('z',labelpad = 20,fontsize=25)
+    ax.set_xlabel('x',labelpad = 20,fontsize=35)
+    ax.set_ylabel('y',labelpad = 20,fontsize=35)
+    ax.set_zlabel('z',labelpad = 20,fontsize=35)
     ax.tick_params(labelsize=20)
+    ax.set_box_aspect(None, zoom=0.85)
     plt.tight_layout()
 
-    ax.voxels(tensor[0,:,:,:],alpha=0.6)
+    ax.voxels(tensor[0,:,:,:],alpha=0.3)
     ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
     
     plt.tight_layout()
