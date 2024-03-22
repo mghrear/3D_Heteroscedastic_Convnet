@@ -32,7 +32,7 @@ def plot_track_dir(x_points, y_points, z_points,  start, direction, xlim = (-1,3
     plt.tight_layout()
 
     # Add red line for true direction
-    ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
+    ax.quiver(start[0],start[1],start[2],2*direction[0],2*direction[1],2*direction[2], linewidths=4, color = 'red')
     ax.scatter3D(x_points, y_points, z_points, s = 4, c='k', marker='o', alpha=0.1)
 
 
@@ -54,7 +54,7 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
     plt.tight_layout()
 
     ax.voxels(tensor[0,:,:,:],alpha=0.3)
-    ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
+    ax.quiver(start[0],start[1],start[2],2*direction[0],2*direction[1],2*direction[2], linewidths=4, color = 'red')
     
     plt.tight_layout()
 
