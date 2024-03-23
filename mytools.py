@@ -22,10 +22,11 @@ def plot_track_dir(x_points, y_points, z_points,  start, direction, xlim = (-1,3
     ax = plt.axes(projection='3d')
     
 
-    ax.set_xlabel('x [cm]',fontsize=15)
-    ax.set_ylabel('y [cm]',fontsize=15)
-    ax.set_zlabel('z [cm]',fontsize=15)
-    ax.tick_params(labelsize=12)
+    ax.set_xlabel('x [cm]',labelpad = 20,fontsize=20)
+    ax.set_ylabel('y [cm]',labelpad = 20,fontsize=20)
+    ax.set_zlabel('z [cm]',labelpad = 20,fontsize=20)
+    ax.tick_params(labelsize=18)
+    ax.set_box_aspect(None, zoom=0.85)
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
     ax.set_zlim(zlim)
@@ -34,7 +35,6 @@ def plot_track_dir(x_points, y_points, z_points,  start, direction, xlim = (-1,3
     # Add red line for true direction
     ax.quiver(start[0],start[1],start[2],2*direction[0],2*direction[1],2*direction[2], linewidths=4, color = 'red')
     ax.scatter3D(x_points, y_points, z_points, s = 4, c='k', marker='o', alpha=0.1)
-
 
 
 # Plot a voxel grid as well as an arrow indicating the initial direction
@@ -46,11 +46,15 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
     fig = plt.figure(figsize=(10, 10))
     ax = plt.axes(projection='3d')
 
-    ax.set_xlabel('x',labelpad = 20,fontsize=35)
-    ax.set_ylabel('y',labelpad = 20,fontsize=35)
-    ax.set_zlabel('z',labelpad = 20,fontsize=35)
-    ax.tick_params(labelsize=20)
+    ax.set_xlabel('x',labelpad = 40,fontsize=35)
+    ax.set_ylabel('y',labelpad = 40,fontsize=35)
+    ax.set_zlabel('z',labelpad = 40,fontsize=35)
+    ax.tick_params(labelsize=30)
+    ax.tick_params(direction='out', pad=20)
     ax.set_box_aspect(None, zoom=0.85)
+
+
+    
     plt.tight_layout()
 
     ax.voxels(tensor[0,:,:,:],alpha=0.3)

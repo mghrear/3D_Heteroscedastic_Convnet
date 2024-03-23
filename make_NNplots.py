@@ -117,7 +117,7 @@ def plot_reg(name = "reg_plot.pdf", line_width = 1, neuron_size = 200):
 
 
     # Add a legend
-    ax.legend(loc = "upper right", prop={'size': 16})
+    ax.legend(loc = 0, prop={'size': 20})
 
     # Remove axis ticks
     ax.set_xticks([])
