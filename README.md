@@ -65,6 +65,7 @@ A slurm script for queuing jobs that run a jupyter notebook.
 # Citation
 If you find this useful to your work, please cite
 
+```latex
 @misc{ghrear2024deep,
       title={Deep Probabilistic Direction Prediction in 3D with Applications to Directional Dark Matter Detectors}, 
       author={Majd Ghrear and Peter Sadowski and Sven Einar Vahsen},
@@ -73,3 +74,4 @@ If you find this useful to your work, please cite
       archivePrefix={arXiv},
       primaryClass={hep-ex}
 }
+```
