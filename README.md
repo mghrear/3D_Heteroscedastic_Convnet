@@ -61,3 +61,15 @@ A python script that creates figures depicting the dense portions of the RCN and
 
 ## submit_job.slurm
 A slurm script for queuing jobs that run a jupyter notebook.
+
+# Citation
+If you find this useful to your work, please cite
+
+@misc{ghrear2024deep,
+      title={Deep Probabilistic Direction Prediction in 3D with Applications to Directional Dark Matter Detectors}, 
+      author={Majd Ghrear and Peter Sadowski and Sven Einar Vahsen},
+      year={2024},
+      eprint={2403.15949},
+      archivePrefix={arXiv},
+      primaryClass={hep-ex}
+}
