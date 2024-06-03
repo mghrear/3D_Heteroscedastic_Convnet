@@ -6,10 +6,10 @@ Contains functions, classes, and dictionaries that are used throughout.
 
 ## mymodels.py
 Contains all models, which includes:
-1. spConvnet_HSCDC_subM: A heteroscedastic convnet for probabilistic direction predictions (HCN)
-2. spConvnet_subM: A homoscedastic convnet for point estimate predictions (RCN)
-3. NML: A non-ML algorithim originally developed for X-ray polarimetry
-4. NML2: A "cheat" method which uses information that is only available in simulation to estimate the best expected performance
+1. spConvnet_HSCDC_subM: A heteroscedastic convnet for probabilistic direction predictions (creates vMF-NN or Gauss-NN model, depending on loss function used)
+2. spConvnet_subM: A homoscedastic convnet for point estimate predictions (creates Det-NN model)
+3. NML: A non-ML algorithim originally developed for X-ray polarimetry (Non-ML model)
+4. NML2: A method which uses information that is only available in simulation to estimate the best expected performance (Best-Expected model)
 
 ## explore_data.ipynb
 An exploratory notebook for reading, processing, saving, and loading the electron simulation data. Contains figures / examples throughout all stages of the preprocessing.
@@ -29,35 +29,52 @@ Defines and generates a data set of arrows pointing in random direction for the 
 ## explain_nan_issue.ipynb
 A jupyter notebook that illustrates some of the practicle issues encountered while training the heterscedastic model
 
-## RCN_arrows.ipynb
-Notebook where we train the RCN model on a toy test case (arrows). Here the convnet quickly learns to predict the directions of 3D arrows.
+## Det-NN_arrows.ipynb
+Notebook where we train the Det-NN model on a toy test case (arrows). Here the convnet quickly learns to predict the directions of 3D arrows.
 
-## HCN_arrows.ipynb
-Notebook where we train the HCN on a toy test case (arrows). Here the convnet quickly learns to predict the direction of 3D arrows with a very small directional uncertainty.
+## vMF-NN_arrows.ipynb
+Notebook where we train the vMF-NN on a toy test case (arrows). Here the convnet quickly learns to predict the direction of 3D arrows with a very small directional uncertainty.
 
-## RCN.ipynb
-Notebook where we train the RNC model on electron simulations.
+## Det-NN.ipynb
+Notebook where we train the Det-NN model on electron simulations.
 
-## HCN.ipynb
-Notebook where we train the RCN model on electron simulations.
+## vMF-NN.ipynb
+Notebook where we train the vMF-NN model on electron simulations.
+
+## Gauss-NN.ipynb
+Notebook where we train the Gauss-NN model on electron simulations.
 
 ## tune_NML.py
 A script used to tune the parameters of the non-ML algorithim originally developed for X-ray polarimetry.
 
 ## tune_NML2.py
-A script used to tune the "cheat" method which uses information that is only available in simulation to estimate the best expected performance
+A script used to tune the method which uses information that is only available in simulation to estimate the best expected performance.
 
 ## test_models.ipynb
-A notebook for testing and comparing all models on the electron simulation test sets.
+A notebook for testing and comparing models on the electron simulation test sets.
 
 ## test_arrows.ipynb
-A notebook for testing the RCN and HCN models on the toy test case of detecting arrow directions.
+A notebook for testing Det-NN and vMF-NN on the toy problem of detecting arrow directions.
 
 ## test_kappa.ipynb
-A notebook for testing the calibration of the HCN model.
+A notebook for testing the calibration of the vMF-NN model.
 
 ## make_NNplots.py
-A python script that creates figures depicting the dense portions of the RCN and HCN models.
+A python script that creates figures depicting the dense portions of the Det-NN and vMF-NN models.
 
 ## submit_job.slurm
 A slurm script for queuing jobs that run a jupyter notebook.
+
+# Citation
+If you find this useful to your work, please cite
+
+```latex
+@misc{ghrear2024deep,
+      title={Deep Probabilistic Direction Prediction in 3D with Applications to Directional Dark Matter Detectors}, 
+      author={Majd Ghrear and Peter Sadowski and Sven Einar Vahsen},
+      year={2024},
+      eprint={2403.15949},
+      archivePrefix={arXiv},
+      primaryClass={hep-ex}
+}
+```
