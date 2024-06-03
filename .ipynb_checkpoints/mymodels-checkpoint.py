@@ -9,6 +9,7 @@ import spconv.pytorch as spconv
 
     
 # Heteroscedastic convnet model
+# Used to create vMF-NN and Gauss-NN, depending on which loss function is used
 class spConvnet_HSCDC_subM(nn.Module):
     def __init__(self, shape):
         super(spConvnet_HSCDC_subM, self).__init__()
@@ -52,11 +53,11 @@ class spConvnet_HSCDC_subM(nn.Module):
         output2 = F.softplus(self.fc4_2(x2))
                 
         return output1,output2
-    
 
 
     
-# Homoscedastic convnet model    
+# Homoscedastic convnet model
+# Used to create Det-NN
 class spConvnet_subM (nn.Module):
     def __init__(self, shape):
         super(spConvnet_subM, self).__init__()
@@ -95,47 +96,7 @@ class spConvnet_subM (nn.Module):
         
         return output
     
-# Homoscedastic convnet model    
-class spConvnet_subM_alpha (nn.Module):
-    def __init__(self, shape):
-        super(spConvnet_subM_alpha, self).__init__()
-        self.net = spconv.SparseSequential(
-            spconv.SubMConv3d(in_channels=1, out_channels=32, kernel_size=7, stride=1, bias=True),
-            nn.ReLU(),
-            spconv.SubMConv3d(in_channels=32, out_channels=40, kernel_size=5, stride=1, bias=True),
-            nn.ReLU(),
-            spconv.SparseConv3d(in_channels=40, out_channels=50, kernel_size=6, stride=2, bias=True),
-            nn.ReLU(),
-            spconv.SparseMaxPool3d(kernel_size=2, stride=2),
-            spconv.SparseConv3d(in_channels=50, out_channels=30, kernel_size=3, stride=2, bias=True),
-            nn.ReLU(),
-            spconv.SparseConv3d(in_channels=30, out_channels=10, kernel_size=3, stride=1, bias=True),
-            nn.ReLU(),
-            spconv.SparseMaxPool3d(kernel_size=2, stride=2),
-            spconv.ToDense(),
-        )
-        self.fc1 = nn.Linear(6**3 *10, 500)
-        self.fc2 = nn.Linear(500, 200)
-        self.fc3 = nn.Linear(200, 50)
-        self.fc4 = nn.Linear(50, 3)
-        
-        self.shape = shape
 
-    def forward(self, features, indices, batch_size):
-        
-        x_sp = spconv.SparseConvTensor(features, indices, self.shape, batch_size)
-                        
-        x = self.net(x_sp)
-        x = torch.flatten(x, 1) # flatten all dimensions except batch
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = torch.tanh(self.fc3(x))
-        pre_output = self.fc4(x)
-        output = F.normalize(pre_output, dim=1)
-        
-        return pre_output, output
-    
-    
 # Method for determining the initial direction of an electron recoil without ML
 # This method is from https://iopscience.iop.org/article/10.3847/1538-3881/ac51c9/pdf
 # Useful ref for weighted SVD fits: https://lucidar.me/en/mathematics/weighted-pca/
@@ -205,7 +166,7 @@ def NML(x_vals, y_vals, z_vals, charges, true_dir, n_sigma_L = 1.5, n_sigma_H = 
     
 
 # Method for determining the initial direction of an electron recoil without ML
-# This is a "cheat" method which uses information that is not experimentally available
+# This the Best-Expected method which uses information that is not experimentally available
 def NML2 (x_vals, y_vals, z_vals, charges, true_dir, offset, eps):
     
     # Shift starting point of recoil to origin

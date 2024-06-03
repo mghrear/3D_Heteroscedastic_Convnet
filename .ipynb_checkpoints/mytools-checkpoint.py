@@ -6,7 +6,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import torch
 from torch import nn
 import pandas as pd
-#from torch.masked import masked_tensor, as_masked_tensor
 
 # Here we define the pixel grid parameters used throughout
 voxel_grid = {
@@ -22,19 +21,19 @@ def plot_track_dir(x_points, y_points, z_points,  start, direction, xlim = (-1,3
     ax = plt.axes(projection='3d')
     
 
-    ax.set_xlabel('x [cm]',fontsize=15)
-    ax.set_ylabel('y [cm]',fontsize=15)
-    ax.set_zlabel('z [cm]',fontsize=15)
-    ax.tick_params(labelsize=12)
+    ax.set_xlabel('x [cm]',labelpad = 20,fontsize=20)
+    ax.set_ylabel('y [cm]',labelpad = 20,fontsize=20)
+    ax.set_zlabel('z [cm]',labelpad = 20,fontsize=20)
+    ax.tick_params(labelsize=18)
+    ax.set_box_aspect(None, zoom=0.85)
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
     ax.set_zlim(zlim)
     plt.tight_layout()
 
     # Add red line for true direction
-    ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
+    ax.quiver(start[0],start[1],start[2],2*direction[0],2*direction[1],2*direction[2], linewidths=4, color = 'red')
     ax.scatter3D(x_points, y_points, z_points, s = 4, c='k', marker='o', alpha=0.1)
-
 
 
 # Plot a voxel grid as well as an arrow indicating the initial direction
@@ -46,15 +45,19 @@ def plot_tensor_dir(tensor, start, direction, eff_l, vox_l):
     fig = plt.figure(figsize=(10, 10))
     ax = plt.axes(projection='3d')
 
-    ax.set_xlabel('x',labelpad = 20,fontsize=35)
-    ax.set_ylabel('y',labelpad = 20,fontsize=35)
-    ax.set_zlabel('z',labelpad = 20,fontsize=35)
-    ax.tick_params(labelsize=20)
+    ax.set_xlabel('x',labelpad = 40,fontsize=35)
+    ax.set_ylabel('y',labelpad = 40,fontsize=35)
+    ax.set_zlabel('z',labelpad = 40,fontsize=35)
+    ax.tick_params(labelsize=30)
+    ax.tick_params(direction='out', pad=20)
     ax.set_box_aspect(None, zoom=0.85)
+
+
+    
     plt.tight_layout()
 
     ax.voxels(tensor[0,:,:,:],alpha=0.3)
-    ax.quiver(start[0],start[1],start[2],direction[0],direction[1],direction[2], linewidths=4, color = 'red')
+    ax.quiver(start[0],start[1],start[2],2*direction[0],2*direction[1],2*direction[2], linewidths=4, color = 'red')
     
     plt.tight_layout()
 
@@ -81,7 +84,7 @@ def plot_arrow(x_points, y_points, z_points):
 
 
 
-# Plot a voxel grid of the arrow
+# Plot a voxel grid of the arrow toy example
 def vox_plot_arrow(tensor, eff_l, vox_l):
 
 
@@ -97,7 +100,7 @@ def vox_plot_arrow(tensor, eff_l, vox_l):
     ax.voxels(tensor[0,:,:,:])
 
 
-# Rotation matrices about z and y
+# Rotation matrices about z and y axis
 R_z = lambda ang: np.array( [[np.cos(ang),-np.sin(ang),0],[np.sin(ang),np.cos(ang),0],[0,0,1]] )
 R_y = lambda ang: np.array( [[np.cos(ang),0,np.sin(ang)],[0,1,0],[-np.sin(ang),0,np.cos(ang)]] )
 
@@ -128,66 +131,32 @@ class CustomDataset(torch.utils.data.Dataset):
     
     def __getitem__(self,idx):
         return ( torch.load(self.dir_loc + 'sparse_recoils_' + str(idx) + '.pt' ), torch.Tensor(self.st_info.iloc[idx].dir), torch.Tensor(self.st_info.iloc[idx].offset) )
+
     
 #Loss functions
 CS = nn.CosineSimilarity()
 
-# Cosine Similarity Loss for regular convnet
+# Cosine Similarity Loss for Det-NN
+# This is equivalent to the Cosine Distance Loss 
 def CSloss(output, target):
     loss = torch.mean(-1.0*CS(output,target))
     return loss
 
 
-# Negative Log Likelihood Loss for HSCDC convnet
-# Loss1 is the true loss function and loss2 is a very close approximation for high K
-# Loss1 is unstable, when loss1 = inf, torch.minimum will select loss2 instead
-# However, the gradient of the torch.miniumum is unstable when one argument is inf so this doesn't work
-def NLLloss(output, target):
+# Negative Log Likelihood Loss for Gauss-NN
+def NLL_Gauss(output, target):
     
-    # target us the x parameters in the Kent distribution
-    G = output[0] # \gamma_1 parameters in Kent distribution
-    K = output[1].flatten() # \kappa parameter in Kent distribution
-    
-    # We either use the true NLL loss (with loss1) or a very close approximation (with loss2) depending on whether loss1 = inf
-    loss1 = -1.0 * torch.log(torch.div(K,4*torch.pi*torch.sinh(K)))
-    loss2 = -1.0 * ( torch.log(torch.div(K,2*torch.pi)) - K )
-    
-    # Compute negative log likelihood using Kent distribution
-    loss = torch.mean( torch.minimum(loss1,loss2) - ( K * torch.sum(G*target,dim=1) ) )
+    G = output[0] # Predicted mean directions 
+    K = output[1].flatten() # Sigmas
+
+    loss = torch.mean( torch.log(K**3) + ( torch.sum( (G-target)**2 , dim=1) / (2 * (K**2)) ) )
     
     return loss
 
 
-# Negative Log Likelihood Loss for HSCDC convnet
-# This implementation uses pytorch masked tensors not functions are implemented with masked tensors so this doesn't work
-def NLLloss_masked(output, target):
-    
-    # target us the x parameters in the Kent distribution
-    G = output[0] # \gamma_1 parameters in Kent distribution
-    K = output[1].flatten() # \kappa parameter in Kent distribution
-    
-    loss1 = -1.0 * torch.log(torch.div(K,4*torch.pi*torch.sinh(K)))
-    loss2 = -1.0 * ( torch.log(torch.div(K,2*torch.pi)) - K )
-    
-    mask = K<40.0
-    
-    mx = masked_tensor(loss1.clone().detach(), mask)
-    my = masked_tensor(loss2.clone().detach(), ~mask)
-    
-    loss_K = torch.where(mask, mx, my)
-    
-        
-    # Compute negative log likelihood using Kent distribution
-    loss = torch.mean( loss_K - ( K * torch.sum(G*target,dim=1) ))
-    
-    
-    return loss
-
-# Negative Log Likelihood Loss for HSCDC convnet
-# Loss1 is a 15ht order Taylor series about K=0, loss2 is a very close approximation for high K
-# To aviod instabilities we either use Loss1 or Loss2, never the true expression for loss
-# With this treatement the maximum error on the loss occers when K=2.65, the true loss is 3.5083 and both approximations are off by 0.005
-# This method works
+# Negative Log Likelihood Loss for vMF-NN
+# Loss1 is a 15ht order Taylor series of the NLL about K=0, loss2 is a very close approximation of the NLL for high K
+# To aviod instabilities we either use Loss1 or Loss2, never the true expression for the NLL
 def NLLloss_TS(output, target):
     
     # target us the x parameters in the Kent distribution
@@ -283,7 +252,7 @@ def validate(dataloader, model, loss_fn, device):
     return(val_loss)
 
 
-# Test Loop for heteroscedastic convnet model
+# Test Loop for vMF-NN and Gauss-NN models
 def test_HSCDC(dataloader, model, device):
     v_pred = torch.Tensor([])
     K_pred = torch.Tensor([])
@@ -312,7 +281,7 @@ def test_HSCDC(dataloader, model, device):
 
     return v_pred, K_pred, v_true, off_true
 
-# Test Loop homoscedastic convnet model
+# Test Loop for Det-NN model
 def test_CNN(dataloader, model, device):
     v_pred = torch.Tensor([])
     v_true = torch.Tensor([])
@@ -359,7 +328,7 @@ def test_NML(dataframe, model, n_sigma_L = 1.5, n_sigma_H = 3, w_o = 0.05, cheat
     
     return v_pred, v_true, off_true
 
-# Test Loop for non-ML2 model
+# Test Loop for Best-Expected model
 def test_NML2(dataframe, model, eps):
     
     v_pred, v_true, off_true = [], [], []
