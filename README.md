@@ -47,7 +47,7 @@ Notebook where we train the Gauss-NN model on electron simulations.
 ## tune_NML.py
 A script used to tune the parameters of the non-ML algorithim originally developed for X-ray polarimetry.
 
-## tune_NML2.py
+## tune_Best-Expected.py
 A script used to tune the method which uses information that is only available in simulation to estimate the best expected performance.
 
 ## test_models.ipynb
