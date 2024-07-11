@@ -69,11 +69,18 @@ A slurm script for queuing jobs that run a jupyter notebook.
 If you find this useful to your work, please cite
 
 ```latex
-@article{10.1088/2632-2153/ad5f13,
-	author={Ghrear, Majd and Sadowski, Peter and Vahsen, Sven Einar},
-	title={Deep Probabilistic Direction Prediction in 3D with Applications to Directional Dark Matter Detectors},
-	journal={Machine Learning: Science and Technology},
-	url={http://iopscience.iop.org/article/10.1088/2632-2153/ad5f13},
-	year={2024}
+@article{Ghrear_2024,
+doi = {10.1088/2632-2153/ad5f13},
+url = {https://dx.doi.org/10.1088/2632-2153/ad5f13},
+year = {2024},
+month = {jul},
+publisher = {IOP Publishing},
+volume = {5},
+number = {3},
+pages = {035009},
+author = {Majd Ghrear and Peter Sadowski and Sven E Vahsen},
+title = {Deep probabilistic direction prediction in 3D with applications to directional dark matter detectors},
+journal = {Machine Learning: Science and Technology},
 }
+
 ```
